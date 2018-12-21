@@ -6,7 +6,6 @@ from core.feature_extractor import FeatureExtractor
 from core.dataset import CocoImageDataset
 
 import numpy as np
-import pandas as pd
 import os
 import json
 from tqdm import tqdm
