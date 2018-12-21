@@ -167,7 +167,7 @@ def main():
 
         image_paths = os.listdir('./image/%s/' % phase)
         dataset = CocoImageDataset(root='./image/%s/' % phase, image_paths=image_paths)
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=2)
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, num_workers=4)
 
         for batch_paths, batch_images in tqdm(data_loader):
             feats = feature_extractor(batch_images).data.cpu().numpy()
