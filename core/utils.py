@@ -51,7 +51,7 @@ def write_bleu(scores, path, epoch, iteration):
         f.write('CIDEr: %f\n\n' %scores['CIDEr'])
 
 def load_json(path):
-    with open(path, 'rb') as f:
+    with open(path, 'r') as f:
         return json.load(f)
 
 def save_json(data, path):
