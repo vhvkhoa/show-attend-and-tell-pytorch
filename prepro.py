@@ -163,7 +163,7 @@ def main():
     feature_extractor = FeatureExtractor(model_name='resnet101', layer=3)
     for phase in phases:
         if not os.path.isdir('./data/%s/feats/' % phase):
-            os.mkdir('./data/%s/feats/' % phase)
+            os.makedirs('./data/%s/feats/' % phase)
 
         image_paths = os.listdir('./image/%s/' % phase)
         dataset = CocoImageDataset(root='./image/%s/' % phase, image_paths=image_paths)
