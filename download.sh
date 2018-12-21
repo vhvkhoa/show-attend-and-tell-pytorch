@@ -1,3 +1,4 @@
+#!/bin/bash
 TRAINYEAR=2017
 VALYEAR=2017
 TESTYEAR=2014
@@ -6,7 +7,7 @@ TRAIN=1
 VAL=1
 TEST=1
 
-if [$TRAINYEAR -eq $VALYEAR] && [$TRAIN -eq 1]
+if [! $TRAINYEAR -eq $VALYEAR] && [$TRAIN -eq 1]
 then
     wget http://images.cocodataset.org/annotations/annotations_trainval$TRAINYEAR.zip -P data/
     unzip data/annotations_trainval$TRAINYEAR.zip -d data/
