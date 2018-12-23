@@ -5,14 +5,28 @@ import time
 import os
 from scipy import ndimage
 from scipy.misc import imresize
-from utils import *
 from tqdm import tqdm
 import torch
 from torch import optim, nn
+from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
+from utils import *
+from dataset import CocoCaptionDataset
+
+def pack_collate_fn(batch):
+    features, cap_vecs, captions = zip(*batch)
+
+    len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]))
+    len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
+    len_sorted_features = [features[i] for i in len_sorted_idx]
+    len_sorted_captions = [captions[i] for i in len_sorted_idx]
+
+    packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec) for cap_vec in cap_vecs])
+
+    return len_sorted_features, packed_cap_vecs, len_sorted_captions
 
 class CaptioningSolver(object):
-    def __init__(self, model, word_to_idx, **kwargs):
+    def __init__(self, model, word_to_idx, train_dataset, val_dataset, **kwargs):
         """
         Required Arguments:
             - model: Show Attend and Tell caption generating model
@@ -48,6 +62,8 @@ class CaptioningSolver(object):
         self.pretrained_model = kwargs.pop('pretrained_model', '')
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
 
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
+
         # set an optimizer by update rule
         if self.update_rule == 'adam':
             self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
@@ -57,8 +73,6 @@ class CaptioningSolver(object):
         self.criterion = nn.CrossEntropyLoss(ignore_index=self._null)
 
         self.train_engine = Engine(self._train)
-
-        self.dataset = 
 
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
