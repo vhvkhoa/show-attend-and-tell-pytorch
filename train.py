@@ -1,7 +1,7 @@
 import argparse
 from core.solver import CaptioningSolver
 from core.model import CaptionGenerator
-from core.utils import load_coco_data
+from core.dataset import CocoCaptionDataset
 
 parser = argparse.ArgumentParser(description='Train model.')
 
@@ -33,23 +33,23 @@ parser.add_argument('--log_path', type=str, default='log/', help='Path to direct
 def main():
     args = parser.parse_args()
     # load train dataset
-    data = load_coco_data(data_path='./data', split='train')
-    word_to_idx = data['word_to_idx']
+    train_data = CocoCaptionDataset(caption_file='./data/annotations/captions_train2017.json', split='train')
+    val_data = CocoCaptionDataset(caption_file='./data/annotations/captions_val2017.json', split='val')
+    word_to_idx = train_data.get_vocab_dict()
     # load val dataset to print out scores every epoch
-    val_data = load_coco_data(data_path='./data', split='val')
 
     model = CaptionGenerator(feature_dim=[args.image_feature_size, args.image_feature_depth], embed_dim=args.embed_dim,
                                     hidden_dim=args.lstm_hidden_size, prev2out=args.prev2out, len_vocab=len(word_to_idx),
                                     ctx2out=args.ctx2out, enable_selector=args.enable_selector, dropout=args.dropout)
 
-    solver = CaptioningSolver(model, word_to_idx, n_time_steps=args.time_steps, n_epochs=args.num_epochs, 
+    solver = CaptioningSolver(model, word_to_idx, train_data, val_data, n_time_steps=args.time_steps, n_epochs=args.num_epochs, 
                                     batch_size=args.batch_size, optimizer=args.optimizer, 
                                     learning_rate=args.learning_rate, metric=args.metric,
                                     snapshot_steps=args.snapshot_steps, eval_every=args.eval_steps,
                                     pretrained_model=args.pretrained_model, start_from=args.start_from, checkpoint_dir=args.checkpoint_dir, 
                                     log_path=args.log_path)
 
-    solver.train(data, val_data, beam_size=args.beam_size)
+    solver.train()
 
 if __name__ == "__main__":
     main()

@@ -63,6 +63,7 @@ class CaptioningSolver(object):
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
 
         # set an optimizer by update rule
         if self.update_rule == 'adam':
@@ -80,7 +81,10 @@ class CaptioningSolver(object):
             os.makedirs(self.log_path)
     
     def _train(self, engine, batch):
-        features, captions, lengths = batch
+        features, packed_cap_vecs, captions = batch
+        print(features.size())
+        print(packed_cap_vecs.size())
+        print(captions[:5])
         self.optimizer.zero_grad()
 
         features = self.model.batch_norm(features)
@@ -96,7 +100,7 @@ class CaptioningSolver(object):
         
         if self.alpha_c > 0:
             alphas = torch.transpose(torch.stack(alphas), 0, 1)
-            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(lengths, -1) - torch.sum(alphas, 1)) ** 2)
+            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(, -1) - torch.sum(alphas, 1)) ** 2)
             loss += alphas_reg
         
         loss.backward()
