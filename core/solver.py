@@ -108,4 +108,4 @@ class CaptioningSolver(object):
         self.optimizer.step()
     
     def train(self):
-        self.train_engine.run(self.dataloader)
+        self.train_engine.run(self.train_loader)
