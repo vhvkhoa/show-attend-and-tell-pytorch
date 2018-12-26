@@ -10,7 +10,7 @@ import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
-from utils import *
+from .utils import *
 from dataset import CocoCaptionDataset
 
 def pack_collate_fn(batch):
