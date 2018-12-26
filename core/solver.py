@@ -21,7 +21,10 @@ def pack_collate_fn(batch):
     len_sorted_features = [features[i] for i in len_sorted_idx]
     len_sorted_captions = [captions[i] for i in len_sorted_idx]
 
-    print([v.size(0) for v in len_sorted_cap_vecs])
+    print(cap_vecs)
+    print(len_sorted_idx)
+    print(len_sorted_cap_vecs)
+    print(len_sorted_features)
     packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec) for cap_vec in len_sorted_cap_vecs])
 
     return len_sorted_features, packed_cap_vecs, len_sorted_captions
