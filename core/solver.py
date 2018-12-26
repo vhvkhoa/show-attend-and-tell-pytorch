@@ -99,8 +99,9 @@ class CaptioningSolver(object):
             loss += self.criterion(logits, captions[i+1])
         
         if self.alpha_c > 0:
+            _, seq_lens = nn.utils.rnn.pad_packed_sequence(packed_cap_vecs)
             alphas = torch.transpose(torch.stack(alphas), 0, 1)
-            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(, -1) - torch.sum(alphas, 1)) ** 2)
+            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
             loss += alphas_reg
         
         loss.backward()
