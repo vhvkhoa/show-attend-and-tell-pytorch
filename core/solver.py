@@ -14,6 +14,7 @@ from .utils import *
 from .dataset import CocoCaptionDataset
 
 def pack_collate_fn(batch):
+    print(batch)
     features, cap_vecs, captions = zip(*batch)
 
     len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]))
