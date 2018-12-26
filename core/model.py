@@ -12,7 +12,6 @@
 
 from __future__ import division
 
-from tf_beam_decoder import beam_decoder
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
