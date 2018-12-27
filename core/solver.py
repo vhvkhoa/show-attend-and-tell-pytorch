@@ -99,8 +99,8 @@ class CaptioningSolver(object):
             logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
                                                                      features_proj[:batch_sizes[i]],
                                                                      curr_cap_vecs,
-                                                                     hidden_states[:batch_sizes[i]],
-                                                                     cell_states[:batch_sizes[i]])
+                                                                     hidden_states[:, :batch_sizes[i]],
+                                                                     cell_states[:, :batch_sizes[i]])
             alphas.append(alpha)
             loss += self.criterion(logits, captions[i+1])
         

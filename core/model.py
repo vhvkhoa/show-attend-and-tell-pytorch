@@ -49,8 +49,8 @@ class CaptionGenerator(nn.Module):
 
     def get_initial_lstm(self, features):
         features_mean = torch.mean(features, 1)
-        h = torch.tanh(self.hidden_state_init_layer(features_mean))
-        c = torch.tanh(self.cell_state_init_layer(features_mean))
+        h = torch.tanh(self.hidden_state_init_layer(features_mean)).unsqueeze(0)
+        c = torch.tanh(self.cell_state_init_layer(features_mean)).unsqueeze(0)
         return c, h
 
     def project_features(self, features):
@@ -100,9 +100,8 @@ class CaptionGenerator(nn.Module):
         if self.enable_selector:
             context, beta = self._selector(context, hidden_states)
 
-        next_input = torch.cat((emb_captions, context), 1)
+        next_input = torch.cat((emb_captions, context), 1).unsqueeze(0)
 
-        print(hidden_states.size(), cell_states.size(), next_input.size())
         output, (next_hidden_states, next_cell_states) = self.lstm_cell(next_input, (hidden_states, cell_states))
 
         logits = self._decode_lstm(self.emb_captions, output, context)
