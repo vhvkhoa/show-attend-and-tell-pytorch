@@ -82,8 +82,6 @@ class CaptioningSolver(object):
     
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions = batch
-        print(features.size())
-        print(captions[:5])
         self.optimizer.zero_grad()
 
         cap_vecs, batch_sizes = packed_cap_vecs
@@ -98,11 +96,11 @@ class CaptioningSolver(object):
         for i in range(self.n_time_steps):
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
-            logits, alpha, (hidden_states, cell_states) = self.model(features[batch_sizes[i]],
-                                                                     features_proj[batch_sizes[i]],
+            logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
+                                                                     features_proj[:batch_sizes[i]],
                                                                      curr_cap_vecs,
-                                                                     hidden_states[batch_sizes[i]],
-                                                                     cell_states[batch_sizes[i]])
+                                                                     hidden_states[:batch_sizes[i]],
+                                                                     cell_states[:batch_sizes[i]])
             alphas.append(alpha)
             loss += self.criterion(logits, captions[i+1])
         
