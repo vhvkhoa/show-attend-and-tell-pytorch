@@ -16,10 +16,6 @@ from .dataset import CocoCaptionDataset
 def pack_collate_fn(batch):
     features, cap_vecs, captions = zip(*batch)
 
-    s = features[0].shape
-    print(len(features))
-    print(all([f.shape == s for f in features]))
-
     len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]), reverse=True)
     len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
     len_sorted_features = torch.tensor([features[i] for i in len_sorted_idx])
@@ -87,10 +83,10 @@ class CaptioningSolver(object):
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions = batch
         print(features.size())
-        print(packed_cap_vecs.size())
         print(captions[:5])
         self.optimizer.zero_grad()
 
+        cap_vecs, batch_sizes = packed_cap_vecs
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
@@ -98,8 +94,16 @@ class CaptioningSolver(object):
         loss = 0
         alphas = []
 
+        start_idx = 0
         for i in range(self.n_time_steps):
-            logits, alpha, (hidden_states, cell_states) = self.model(features, features_proj, captions[i], hidden_states, cell_states)
+            end_idx = start_idx + batch_sizes[i]
+            curr_cap_vecs = cap_vecs[start_idx:end_idx]
+            logits, alpha, (hidden_states, cell_states) = self.model(features[batch_sizes[i]],
+                                                                     features_proj[batch_sizes[i]],
+                                                                     curr_cap_vecs,
+                                                                     hidden_states[batch_sizes[i]],
+                                                                     cell_states[batch_sizes[i]])
+            alphas.append(alpha)
             loss += self.criterion(logits, captions[i+1])
         
         if self.alpha_c > 0:
