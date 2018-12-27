@@ -76,7 +76,7 @@ class CaptionGenerator(nn.Module):
     def _selector(self, context, hidden_state):
         beta = torch.sigmoid(self.selector_layer(hidden_state))    # (N, 1)
         context = context * beta
-        print(context.size())
+        print(context.size(), beta.size())
         return context, beta
 
     def _decode_lstm(self, x, h, context):
@@ -98,7 +98,7 @@ class CaptionGenerator(nn.Module):
         emb_captions = self._word_embedding(inputs=past_captions)
 
         context, alpha = self._attention_layer(features, features_proj, hidden_states)
-        print(context.size())
+
         if self.enable_selector:
             context, beta = self._selector(context, hidden_states)
 
