@@ -94,7 +94,7 @@ class CaptionGenerator(nn.Module):
         return out_logits
     
     def forward(self, features, features_proj, past_captions, hidden_states, cell_states):
-        emb_captions = self._word_embedding(inputs=self.last_captions)
+        emb_captions = self._word_embedding(inputs=self.past_captions)
 
         context, alpha = self._attention_layer(features, features_proj, hidden_states)
         if self.enable_selector:
