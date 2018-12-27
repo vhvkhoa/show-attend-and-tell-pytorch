@@ -8,6 +8,7 @@ from scipy.misc import imresize
 from tqdm import tqdm
 import torch
 from torch import optim, nn
+from nn import functional as F
 from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
 from .utils import *
@@ -96,14 +97,14 @@ class CaptioningSolver(object):
         for i in range(len(batch_sizes)-1):
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
+            print(curr_cap_vecs.size())
             logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
                                                                      features_proj[:batch_sizes[i]],
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
             alphas.append(alpha)
-            print(logits.size())
-            loss += self.criterion(logits, curr_cap_vecs[end_idx:batch_sizes[i+1]])
+            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:batch_sizes[i+1]])
             start_idx = end_idx
         
         if self.alpha_c > 0:
