@@ -49,8 +49,8 @@ class CaptionGenerator(nn.Module):
 
     def get_initial_lstm(self, features):
         features_mean = torch.mean(features, 1)
-        h = F.tanh(self.hidden_state_init_layer(features_mean))
-        c = F.tanh(self.cell_state_init_layer(features_mean))
+        h = torch.tanh(self.hidden_state_init_layer(features_mean))
+        c = torch.tanh(self.cell_state_init_layer(features_mean))
         return c, h
 
     def project_features(self, features):
@@ -67,7 +67,7 @@ class CaptionGenerator(nn.Module):
         return embed_inputs
 
     def _attention_layer(self, features, features_proj, hidden_state):
-        h_att = nn.ReLU(features_proj + self.hidden_to_attention_layer(hidden_state).unsqueeze(1))    # (N, L, D)
+        h_att = F.relu(features_proj + self.hidden_to_attention_layer(hidden_state).unsqueeze(1))    # (N, L, D)
         out_att = self.attention_layer(h_att.view(-1, self.D)).view(-1, self.L)   # (N, L)
         alpha = F.softmax(out_att, dim=-1)
         context = torch.sum(features * alpha.unsqueeze(2), 1)   #(N, D)
@@ -87,7 +87,7 @@ class CaptionGenerator(nn.Module):
 
         if self.prev2out:
             h_logits += x
-        h_logits = F.tanh(h_logits)
+        h_logits = torch.tanh(h_logits)
 
         h_logits = self.dropout(h_logits)
         out_logits = self.embedding_to_output_layer(h_logits)
