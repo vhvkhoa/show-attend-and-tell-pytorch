@@ -93,7 +93,7 @@ class CaptioningSolver(object):
         alphas = []
 
         start_idx = 0
-        for i in range(self.n_time_steps):
+        for i in range(len(batch_sizes)-1):
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
             logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
@@ -102,7 +102,9 @@ class CaptioningSolver(object):
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
             alphas.append(alpha)
-            loss += self.criterion(logits, captions[i+1])
+            print(logits.size())
+            loss += self.criterion(logits, curr_cap_vecs[end_idx:batch_sizes[i+1]])
+            start_idx = end_idx
         
         if self.alpha_c > 0:
             _, seq_lens = nn.utils.rnn.pad_packed_sequence(packed_cap_vecs)
