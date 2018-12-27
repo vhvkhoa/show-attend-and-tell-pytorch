@@ -21,10 +21,11 @@ def pack_collate_fn(batch):
     len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
     len_sorted_features = torch.tensor([features[i] for i in len_sorted_idx])
     len_sorted_captions = [captions[i] for i in len_sorted_idx]
+    seq_lens = torch.tensor([len(cap_vec) for cap_vec in len_sorted_cap_vecs])
 
     packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec) for cap_vec in len_sorted_cap_vecs])
 
-    return len_sorted_features, packed_cap_vecs, len_sorted_captions
+    return len_sorted_features, packed_cap_vecs, len_sorted_captions, seq_lens
 
 class CaptioningSolver(object):
     def __init__(self, model, word_to_idx, train_dataset, val_dataset, **kwargs):
@@ -82,13 +83,14 @@ class CaptioningSolver(object):
             os.makedirs(self.log_path)
     
     def _train(self, engine, batch):
-        features, packed_cap_vecs, captions = batch
+        features, packed_cap_vecs, captions, seq_lens = batch
         self.optimizer.zero_grad()
 
         cap_vecs, batch_sizes = packed_cap_vecs
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
+        inv_seq_lens = 1 / seq_lens
 
         loss = 0
         alphas = []
@@ -103,15 +105,13 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
-            alphas.append(alpha)
             loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            if self.alpha_c > 0:
+                alpha_reg = self.alpha_c * torch.sum((seq_lens[:batch_sizes[i+1]] - alpha) ** 2)
+                loss += alpha_reg
+
+            alphas.append(alpha)
             start_idx = end_idx
-        
-        if self.alpha_c > 0:
-            _, seq_lens = nn.utils.rnn.pad_packed_sequence(packed_cap_vecs)
-            alphas = torch.transpose(torch.stack(alphas), 0, 1)
-            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
-            loss += alphas_reg
         
         loss.backward()
         self.optimizer.step()
