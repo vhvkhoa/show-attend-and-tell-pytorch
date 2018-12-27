@@ -17,7 +17,7 @@ def pack_collate_fn(batch):
     features, cap_vecs, captions = zip(*batch)
 
     s = features[0].shape
-    print(s)
+    print(len(features))
     print(all([f.shape == s for f in features]))
 
     len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]), reverse=True)
