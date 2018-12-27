@@ -68,7 +68,7 @@ class CaptionGenerator(nn.Module):
 
     def _attention_layer(self, features, features_proj, hidden_states):
         print(features_proj.size())
-        h = self.hidden_to_attention_layer(hidden_states.squeeze(0)).unsqueeze(-1)
+        h = self.hidden_to_attention_layer(hidden_states.squeeze(0)).unsqueeze(1)
         print(h.size())
         h_att = F.relu(features_proj + h)    # (N, L, D)
         out_att = self.attention_layer(h_att.view(-1, self.D)).view(-1, self.L)   # (N, L)
