@@ -105,6 +105,6 @@ class CaptionGenerator(nn.Module):
 
         output, (next_hidden_states, next_cell_states) = self.lstm_cell(next_input, (hidden_states, cell_states))
 
-        logits = self._decode_lstm(self.emb_captions, output, context)
+        logits = self._decode_lstm(emb_captions, output, context)
 
         return logits, alpha, (next_hidden_states, next_cell_states)
