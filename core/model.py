@@ -83,7 +83,7 @@ class CaptionGenerator(nn.Module):
         h_logits = self.hidden_to_embedding_layer(h)
 
         if self.ctx2out:
-            h_logits += self.context_to_embedding_layer(h_logits)
+            h_logits += self.context_to_embedding_layer(context)
 
         if self.prev2out:
             h_logits += x
