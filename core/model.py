@@ -103,6 +103,7 @@ class CaptionGenerator(nn.Module):
         if self.enable_selector:
             context, beta = self._selector(context, hidden_states)
 
+        print(context.size(), emb_captions.size())
         next_input = torch.cat((emb_captions, context), 1).unsqueeze(0)
 
         output, (next_hidden_states, next_cell_states) = self.lstm_cell(next_input, (hidden_states, cell_states))
