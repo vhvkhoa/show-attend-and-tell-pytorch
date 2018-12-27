@@ -107,6 +107,7 @@ class CaptioningSolver(object):
                                                                      cell_states[:, :batch_sizes[i]])
             loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             if self.alpha_c > 0:
+                print(alpha.size())
                 alpha_reg = self.alpha_c * torch.sum((seq_lens[:batch_sizes[i+1]] - alpha) ** 2)
                 loss += alpha_reg
 
