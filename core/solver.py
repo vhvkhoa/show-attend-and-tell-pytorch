@@ -8,7 +8,7 @@ from scipy.misc import imresize
 from tqdm import tqdm
 import torch
 from torch import optim, nn
-from nn import functional as F
+from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
 from .utils import *
