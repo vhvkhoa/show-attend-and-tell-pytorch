@@ -104,7 +104,7 @@ class CaptioningSolver(object):
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
             alphas.append(alpha)
-            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:batch_sizes[i+1]])
+            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             start_idx = end_idx
         
         if self.alpha_c > 0:
