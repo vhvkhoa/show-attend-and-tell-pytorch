@@ -64,7 +64,7 @@ class CaptioningSolver(object):
         self.checkpoint_dir = kwargs.pop('checkpoint_dir', './model/')
         self.pretrained_model = kwargs.pop('pretrained_model', '')
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
-        self.device = kwargs.pop('dvice', 'cuda:1')
+        self.device = kwargs.pop('device', 'cuda:1')
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
