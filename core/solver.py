@@ -110,12 +110,13 @@ class CaptioningSolver(object):
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions, seq_lens = batch
         features = features.to(device=self.device)
-        pack_cap_vecs = packed_cap_vecs.to(device=self.device)
         seq_lens = seq_lens.to(device=self.device)
 
         self.optimizer.zero_grad()
 
         cap_vecs, batch_sizes = packed_cap_vecs
+        cap_vecs = cap_vecs.to(device=self.device)
+        batch_sizes = batch_sizes.to(device=self.device)
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
