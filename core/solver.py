@@ -52,7 +52,7 @@ class CaptioningSolver(object):
 
         self.n_time_steps = kwargs.pop('n_time_steps', 31)
         self.batch_size = kwargs.pop('batch_size', 100)
-        self.beam_size = kwrags.pop('beam_size', 3)
+        self.beam_size = kwargs.pop('beam_size', 3)
         self.update_rule = kwargs.pop('optimizer', 'adam')
         self.learning_rate = kwargs.pop('learning_rate', 0.01)
         self.metric = kwargs.pop('metric', 'CIDEr')
