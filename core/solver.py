@@ -155,6 +155,7 @@ class CaptioningSolver(object):
         return decode_captions(cap_vecs, self.word_to_idx)
 
     def train(self, num_epochs=10):
+        self.model.train()
         self.train_engine.run(self.train_loader, max_epochs=num_epochs)
 
     def test(self, test_dataset=None, is_validation=False):
