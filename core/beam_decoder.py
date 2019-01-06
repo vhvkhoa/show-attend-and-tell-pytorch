@@ -8,7 +8,7 @@ class BeamSearchDecoder(object):
         self.beam_size = beam_size
         self.vocab_size = vocab_size
         self._start = start_token
-        self._stop = stop_token
+        self._end = stop_token
         self.n_time_steps = n_time_steps
     
     def compute_score(self, logits, beam_logprobs):
@@ -38,9 +38,9 @@ class BeamSearchDecoder(object):
                                                                      cell_states)
         
             beam_scores = self.compute_score(logits, beam_scores)
-            end_scores = beam_scores[:, self._stop].view(batch_size, -1)
-            beam_scores = torch.cat([beam_scores[:, :self._stop],
-                                       beam_scores[:, self._stop:]], 1).view(batch_size, -1)
+            end_scores = beam_scores[:, self._end].view(batch_size, -1)
+            beam_scores = torch.cat([beam_scores[:, :self._end],
+                                       beam_scores[:, self._end:]], 1).view(batch_size, -1)
 
             k_scores, k_indices = torch.topk(beam_scores, self.beam_size)
 
@@ -51,7 +51,7 @@ class BeamSearchDecoder(object):
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
             done_symbols = torch.cat([torch.squeeze(torch.gather(beam_symbols, 1,
                                            done_parent_indices.expand(-1, -1, t + 1)), 1), 
-                                           torch.full([batch_size, self.n_time_steps - t], self._stop)], -1)
+                                           torch.full([batch_size, self.n_time_steps - t], self._end)], -1)
 
             cand_mask = (done_scores_max >= k_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
             cand_finished = cand_mask | cand_finished
