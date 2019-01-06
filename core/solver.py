@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
 from .utils import *
 from .dataset import CocoCaptionDataset
+from beam_decoder import BeamSearchDecoder 
 
 def pack_collate_fn(batch):
     features, cap_vecs, captions = zip(*batch)
@@ -50,8 +51,8 @@ class CaptioningSolver(object):
         self._end = word_to_idx['<END>']
 
         self.n_time_steps = kwargs.pop('n_time_steps', 31)
-        self.n_epochs = kwargs.pop('n_epochs', 10)
         self.batch_size = kwargs.pop('batch_size', 100)
+        self.beam_size = kwrags.pop('beam_size', 3)
         self.update_rule = kwargs.pop('optimizer', 'adam')
         self.learning_rate = kwargs.pop('learning_rate', 0.01)
         self.metric = kwargs.pop('metric', 'CIDEr')
@@ -65,7 +66,9 @@ class CaptioningSolver(object):
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
-        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
+
+        self.beam_decoder = BeamSearchDecoder(self.model, self.beam_size, len(self.word_to_idx), self._start, self._stop, self.n_time_steps)
 
         # set an optimizer by update rule
         if self.update_rule == 'adam':
@@ -76,12 +79,33 @@ class CaptioningSolver(object):
         self.criterion = nn.CrossEntropyLoss(ignore_index=self._null)
 
         self.train_engine = Engine(self._train)
+        self.test_engine = Engine(self._test)
+
+        self.train_engine.add_event_handler(Events.ITERATION_COMPLETED, self.training_end_iter_handler)
 
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
     
+    def training_end_iter_handler(self, engine):
+        iteration = engine.state.iteration
+        epoch = engine.state.epoch
+        loss = engine.state.output
+
+        if (iteration + 1) % self.snapshot_steps == 0:
+            print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration, loss))
+            if (iteration + 1) % self.eval_every == 0:
+                self.test(self.val_loader, is_validation=True)
+    
+    def testing_end_epoch_handler(self, engine, is_val):
+        captions = engine.state.output
+        save_json(captions, './data/%s/%s.candidate.captions.json')
+
+        if is_val: 
+            caption_scores = evaluate(get_scores=True)
+            write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
+        
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions, seq_lens = batch
         self.optimizer.zero_grad()
@@ -98,7 +122,7 @@ class CaptioningSolver(object):
         for i in range(len(batch_sizes)-1):
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
-            print(curr_cap_vecs.size())
+
             logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
                                                                      features_proj[:batch_sizes[i]],
                                                                      curr_cap_vecs,
@@ -111,12 +135,29 @@ class CaptioningSolver(object):
         
         if self.alpha_c > 0:
             alphas = nn.utils.rnn.pad_sequence(alphas)
-            print(alphas.size())
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
             loss += alphas_reg
         
         loss.backward()
         self.optimizer.step()
+        
+        return loss.item()
     
-    def train(self):
-        self.train_engine.run(self.train_loader)
+    def _test(self, engine, batch_features):
+        cap_vecs = self.beam_decoder.decode(batch_features)
+        cap_vec = cap_vecs.data.cpu().numpy()
+        return decode_captions(cap_vecs, self.word_to_idx)
+
+    def train(self, num_epochs=10):
+        self.train_engine.run(self.train_loader, max_epochs=num_epochs)
+
+    def test(self, test_dataset=None, is_validation=False):
+        self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, is_validation)    
+        self.model.eval()
+
+        if test_dataset == None:
+            self.test_engine.run(self.val_loader)
+        else:
+            self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
+            self.test_engine.run(self.test_loader)
+        

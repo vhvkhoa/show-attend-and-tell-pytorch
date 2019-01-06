@@ -39,7 +39,7 @@ def sample_coco_minibatch(data, batch_size):
     return mask, file_names
 
 
-def write_bleu(scores, path, epoch, iteration):
+def write_scores(scores, path, epoch, iteration):
     with open(os.path.join(path, 'val.bleu.scores.txt'), 'a') as f:
         f.write('Epoch %d. Iteration %d\n' %(epoch+1, iteration+1))
         f.write('Bleu_1: %f\n' %scores['Bleu_1'])

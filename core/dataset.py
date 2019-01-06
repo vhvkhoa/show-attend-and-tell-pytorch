@@ -23,8 +23,7 @@ class CocoImageDataset(Dataset):
     def __len__(self, ):
         return len(self.image_paths)
 
-'''CocoCaptionDataset:
-        Use: Cover processed captions and their corresponding features.'''
+
 class CocoCaptionDataset(Dataset):
     def __init__(self, caption_file, split='train'):
         self.split = split
@@ -36,11 +35,14 @@ class CocoCaptionDataset(Dataset):
     
     def __getitem__(self, index):
         annotation = self.annotations[index]
-        caption = annotation['caption']
-        cap_vec = annotation['vector']
         feature_path = os.path.join('data', self.split, 'feats', annotation['file_name'] + '.npy')
         feature = np.load(feature_path)
-        return feature, cap_vec, caption
+        
+        if self.split == 'train':
+            caption = annotation['caption']
+            cap_vec = annotation['vector']
+            return feature, cap_vec, caption
+        return feature
 
     def __len__(self, ):
         return len(self.annotations)

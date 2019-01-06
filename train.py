@@ -42,14 +42,14 @@ def main():
                                     hidden_dim=args.lstm_hidden_size, prev2out=args.prev2out, len_vocab=len(word_to_idx),
                                     ctx2out=args.ctx2out, enable_selector=args.enable_selector, dropout=args.dropout)
 
-    solver = CaptioningSolver(model, word_to_idx, train_data, val_data, n_time_steps=args.time_steps, n_epochs=args.num_epochs, 
-                                    batch_size=args.batch_size, optimizer=args.optimizer, 
+    solver = CaptioningSolver(model, word_to_idx, train_data, val_data, n_time_steps=args.time_steps,
+                                    batch_size=args.batch_size, beam_size=args.beam_size, optimizer=args.optimizer, 
                                     learning_rate=args.learning_rate, metric=args.metric,
                                     snapshot_steps=args.snapshot_steps, eval_every=args.eval_steps,
                                     pretrained_model=args.pretrained_model, start_from=args.start_from, checkpoint_dir=args.checkpoint_dir, 
                                     log_path=args.log_path)
 
-    solver.train()
+    solver.train(num_epochs=args.num_epochs)
 
 if __name__ == "__main__":
     main()
