@@ -18,7 +18,7 @@ parser.add_argument('--ctx2out', action='store_true', default=True, help='Link c
 parser.add_argument('--enable_selector', action='store_true', default=True, help='Enable selector to determine how much important the image context is at every time step.')
 
 """Training parameters"""
-parser.add_argument('--cuda', type=str, default='cuda:1', help='Device to be used for training model.')
+parser.add_argument('--device', type=str, default='cuda:1', help='Device to be used for training model.')
 parser.add_argument('--optimizer', type=str, default='rmsprop', help='Optimizer used to update model\'s weights.')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate.')
 parser.add_argument('--num_epochs', type=int, default=10, help='Number of epochs.')
@@ -41,14 +41,14 @@ def main():
 
     model = CaptionGenerator(feature_dim=[args.image_feature_size, args.image_feature_depth], embed_dim=args.embed_dim,
                                     hidden_dim=args.lstm_hidden_size, prev2out=args.prev2out, len_vocab=len(word_to_idx),
-                                    ctx2out=args.ctx2out, enable_selector=args.enable_selector, dropout=args.dropout)
+                                    ctx2out=args.ctx2out, enable_selector=args.enable_selector, dropout=args.dropout).to(device=args.device)
 
     solver = CaptioningSolver(model, word_to_idx, train_data, val_data, n_time_steps=args.time_steps,
                                     batch_size=args.batch_size, beam_size=args.beam_size, optimizer=args.optimizer, 
                                     learning_rate=args.learning_rate, metric=args.metric,
                                     snapshot_steps=args.snapshot_steps, eval_every=args.eval_steps,
                                     pretrained_model=args.pretrained_model, start_from=args.start_from, checkpoint_dir=args.checkpoint_dir, 
-                                    log_path=args.log_path)
+                                    log_path=args.log_path, device=args.device)
 
     solver.train(num_epochs=args.num_epochs)
 
