@@ -94,7 +94,7 @@ class CaptioningSolver(object):
         loss = engine.state.output
 
         if (iteration + 1) % self.snapshot_steps == 0:
-            print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration, loss))
+            print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration + 1, loss))
             if (iteration + 1) % self.eval_every == 0:
                 self.test(self.val_loader, is_validation=True)
     
@@ -138,7 +138,6 @@ class CaptioningSolver(object):
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
             loss += alphas_reg
         
-        print(loss.item())
         loss.backward()
         self.optimizer.step()
         
