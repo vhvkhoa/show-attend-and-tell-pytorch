@@ -138,6 +138,7 @@ class CaptioningSolver(object):
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
             loss += alphas_reg
         
+        print loss.item()
         loss.backward()
         self.optimizer.step()
         
