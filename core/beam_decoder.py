@@ -13,7 +13,7 @@ class BeamSearchDecoder(object):
         self.n_time_steps = n_time_steps
     
     def compute_score(self, logits, beam_logprobs):
-        return F.log_softmax(torch.squeeze(logits)) + beam_logprobs
+        return F.log_softmax(torch.squeeze(logits), dim=-1) + beam_logprobs
     
     def decode(self, features):
         features = features.to(device=self.device)
@@ -24,13 +24,13 @@ class BeamSearchDecoder(object):
         batch_size = features.size(0)
         hidden_size = hidden_states.size(-1)
 
-        cand_scores = torch.zeros(batch_size, 1)
-        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start)
-        cand_finished = torch.zeros(batch_size, dtype=torch.uint8)
+        cand_scores = torch.zeros(batch_size, 1, device=self.device)
+        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, device=self.device)
+        cand_finished = torch.zeros(batch_size, dtype=torch.uint8, device=self.device)
 
-        beam_symbols = torch.full([batch_size, 1, 1], self._start)
+        beam_symbols = torch.full([batch_size, 1, 1], self._start, device=self.device)
         beam_inputs = torch.full([batch_size], self._start, dtype=torch.int64, device=self.device)
-        beam_scores = torch.zeros(batch_size, self.vocab_size)
+        beam_scores = torch.zeros(batch_size, self.vocab_size, device=self.device)
 
         for t in range(self.n_time_steps):
             logits, alpha, (hidden_states, cell_states) = self.model(features,
