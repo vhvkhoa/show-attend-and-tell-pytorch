@@ -148,9 +148,6 @@ class CaptioningSolver(object):
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
 
         loss.backward()
-        for name, param in self.model.named_parameters():
-            print(name)
-            print(param.grad)
         self.optimizer.step()
         
         return loss.item()
