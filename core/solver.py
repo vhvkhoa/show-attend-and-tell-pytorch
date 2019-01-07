@@ -73,7 +73,7 @@ class CaptioningSolver(object):
 
         # set an optimizer by update rule
         for name, param in self.model.named_parameters():
-            print(name, param.size(), param.requires_grad())
+            print(name, param.size(), param.requires_grad)
         if self.update_rule == 'adam':
             self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
         elif self.update_rule == 'rmsprop':
