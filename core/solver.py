@@ -134,7 +134,8 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
-            print(curr_cap_vecs, cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            print(curr_cap_vecs)
+            print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             total_loss += loss.item() 
             loss.backward(retain_graph=True)
@@ -156,7 +157,6 @@ class CaptioningSolver(object):
 
     def train(self, num_epochs=10):
         self.model.train()
-        print(self.model)
         self.train_engine.run(self.train_loader, max_epochs=num_epochs)
 
     def test(self, test_dataset=None, is_validation=False):
