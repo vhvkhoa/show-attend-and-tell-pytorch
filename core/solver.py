@@ -121,7 +121,7 @@ class CaptioningSolver(object):
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
 
-        loss = 0
+        total_loss = 0
         alphas = []
 
         start_idx = 0
@@ -134,7 +134,10 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
-            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            loss.backward()
+            total_loss += loss.item() 
+            self.optimizer.step()
 
             alphas.append(alpha)
             start_idx = end_idx
@@ -142,12 +145,8 @@ class CaptioningSolver(object):
         if self.alpha_c > 0:
             alphas = nn.utils.rnn.pad_sequence(alphas)
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
-            loss += alphas_reg
         
-        loss.backward()
-        self.optimizer.step()
-        
-        return loss.item()
+        return total_loss
     
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
