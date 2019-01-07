@@ -92,11 +92,11 @@ class CaptioningSolver(object):
     def training_end_iter_handler(self, engine):
         iteration = engine.state.iteration
         epoch = engine.state.epoch
-        loss = engine.state.output
+        loss, acc= engine.state.output
 
-        print(loss)
+        print(loss, acc)
         if (iteration + 1) % self.snapshot_steps == 0:
-            print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration + 1, loss))
+            print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
             if (iteration + 1) % self.eval_every == 0:
                 self.test(self.val_loader, is_validation=True)
     
@@ -123,6 +123,7 @@ class CaptioningSolver(object):
         hidden_states, cell_states = self.model.get_initial_lstm(features)
 
         loss = 0
+        acc = 0
         alphas = []
 
         start_idx = 0
@@ -139,6 +140,7 @@ class CaptioningSolver(object):
             #print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             #print(torch.max(logits, -1))
             loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            acc += torch.sum(torch.argmax(logits, dim=-1)[:batch_sizes[i+1]] == cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
 
             alphas.append(alpha)
             start_idx = end_idx
@@ -150,7 +152,7 @@ class CaptioningSolver(object):
         loss.backward()
         self.optimizer.step()
         
-        return loss.item()
+        return loss.item(), (acc / torch.sum(batch_sizes[1:])).item()
 
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
