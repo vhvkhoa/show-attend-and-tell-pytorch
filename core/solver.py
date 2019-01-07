@@ -97,8 +97,8 @@ class CaptioningSolver(object):
         print(loss)
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration + 1, loss))
-            if (iteration + 1) % self.eval_every == 0:
-                self.test(self.val_loader, is_validation=True)
+            #if (iteration + 1) % self.eval_every == 0:
+            #    self.test(self.val_loader, is_validation=True)
     
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.output
@@ -136,7 +136,7 @@ class CaptioningSolver(object):
                                                                      cell_states[:, :batch_sizes[i]])
             #print('1: ', curr_cap_vecs)
             #print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
-            print(torch.max(logits, -1))
+            #print(torch.max(logits, -1))
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             total_loss += loss.item() 
             loss.backward(retain_graph=True)
