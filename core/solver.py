@@ -111,6 +111,7 @@ class CaptioningSolver(object):
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions, seq_lens = batch
         features = features.to(device=self.device)
+        print(features[:5, :5])
         seq_lens = seq_lens.to(device=self.device)
 
         cap_vecs, batch_sizes = packed_cap_vecs
@@ -147,7 +148,7 @@ class CaptioningSolver(object):
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
         
         return total_loss
-    
+
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
         cap_vec = cap_vecs.data.cpu().numpy()
@@ -167,4 +168,3 @@ class CaptioningSolver(object):
         else:
             self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
             self.test_engine.run(self.test_loader)
-        
