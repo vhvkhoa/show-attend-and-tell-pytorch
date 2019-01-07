@@ -152,7 +152,7 @@ class CaptioningSolver(object):
         loss.backward()
         self.optimizer.step()
 
-        return loss.item(), float(acc.item) / float(torch.sum(batch_sizes[1:]).item())
+        return loss.item(), float(acc.item()) / float(torch.sum(batch_sizes[1:]).item())
 
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
