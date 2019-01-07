@@ -134,8 +134,8 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
-            print(curr_cap_vecs)
-            print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            print('1: ', curr_cap_vecs)
+            print('2: ', cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             total_loss += loss.item() 
             loss.backward(retain_graph=True)
