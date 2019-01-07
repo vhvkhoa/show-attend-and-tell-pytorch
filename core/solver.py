@@ -139,7 +139,6 @@ class CaptioningSolver(object):
             #print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             #print(torch.max(logits, -1))
             loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
-            print(loss.item())
 
             alphas.append(alpha)
             start_idx = end_idx
