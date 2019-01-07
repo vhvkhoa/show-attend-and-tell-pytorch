@@ -3,8 +3,9 @@ from torch.nn import functional as F
 import numpy as np
 
 class BeamSearchDecoder(object):
-    def __init__(self, model, beam_size, vocab_size, start_token, stop_token, n_time_steps):
+    def __init__(self, model, device, beam_size, vocab_size, start_token, stop_token, n_time_steps):
         self.model = model
+        self.device = device
         self.beam_size = beam_size
         self.vocab_size = vocab_size
         self._start = start_token
@@ -15,6 +16,7 @@ class BeamSearchDecoder(object):
         return F.log_softmax(torch.squeeze(logits)) + beam_logprobs
     
     def decode(self, features):
+        features = features.to(device=self.device)
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)

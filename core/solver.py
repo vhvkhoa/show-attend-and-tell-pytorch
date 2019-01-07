@@ -69,7 +69,7 @@ class CaptioningSolver(object):
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
 
-        self.beam_decoder = BeamSearchDecoder(self.model, self.beam_size, len(self.word_to_idx), self._start, self._end, self.n_time_steps)
+        self.beam_decoder = BeamSearchDecoder(self.model, self.device, self.beam_size, len(self.word_to_idx), self._start, self._end, self.n_time_steps)
 
         # set an optimizer by update rule
         if self.update_rule == 'adam':
