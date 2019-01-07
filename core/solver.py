@@ -136,7 +136,7 @@ class CaptioningSolver(object):
                                                                      cell_states[:, :batch_sizes[i]])
             #print('1: ', curr_cap_vecs)
             #print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
-            print(logits)
+            print(torch.max(logits, -1))
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             total_loss += loss.item() 
             loss.backward(retain_graph=True)
