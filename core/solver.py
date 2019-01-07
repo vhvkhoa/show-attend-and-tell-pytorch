@@ -151,7 +151,8 @@ class CaptioningSolver(object):
 
         loss.backward()
         self.optimizer.step()
-        
+
+        print(acc, torch.sum(batch_sizes[1:]))
         return loss.item(), (acc / torch.sum(batch_sizes[1:])).item()
 
     def _test(self, engine, batch_features):
