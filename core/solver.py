@@ -109,6 +109,8 @@ class CaptioningSolver(object):
             write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
         
     def _train(self, engine, batch):
+        self.optimizer.zero_grad()
+
         features, packed_cap_vecs, captions, seq_lens = batch
         features = features.to(device=self.device)
         seq_lens = seq_lens.to(device=self.device)
@@ -118,15 +120,13 @@ class CaptioningSolver(object):
         batch_sizes = batch_sizes.to(device=self.device)
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
-        print(features_proj)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
 
-        total_loss = 0
+        loss = 0
         alphas = []
 
         start_idx = 0
         for i in range(len(batch_sizes)-1):
-            self.optimizer.zero_grad()
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
 
@@ -138,10 +138,8 @@ class CaptioningSolver(object):
             #print('1: ', curr_cap_vecs)
             #print(cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             #print(torch.max(logits, -1))
-            loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
-            total_loss += loss.item() 
-            loss.backward(retain_graph=True)
-            self.optimizer.step()
+            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            print(loss.item())
 
             alphas.append(alpha)
             start_idx = end_idx
@@ -149,8 +147,11 @@ class CaptioningSolver(object):
         if self.alpha_c > 0:
             alphas = nn.utils.rnn.pad_sequence(alphas)
             alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
+
+        loss.backward()
+        self.optimizer.step()
         
-        return total_loss
+        return loss.item()
 
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
