@@ -165,7 +165,7 @@ class CaptioningSolver(object):
         self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, is_validation)    
         self.model.eval()
 
-        if test_dataset == None:
+        if is_validation == True:
             self.test_engine.run(self.val_loader)
         else:
             self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
