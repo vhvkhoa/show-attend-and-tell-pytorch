@@ -68,6 +68,7 @@ class BeamSearchDecoder(object):
                                     k_parent_indices.expand(-1, -1, hidden_size)).view(-1, hidden_size)
             cell_states = torch.gather(cell_states.view(batch_size, -1, hidden_size), 1,
                                     k_parent_indices.expand(-1, -1, hidden_size)).view(-1, hidden_size)
+            beam_inputs = k_symbol_indices.view(-1)
 
         # if not finished, get the best sequence in beam candidate
         best_beam_symbols = beam_symbols[:, 0, :]

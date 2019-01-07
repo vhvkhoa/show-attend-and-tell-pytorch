@@ -129,6 +129,7 @@ class CaptioningSolver(object):
         for i in range(len(batch_sizes)-1):
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
+            print(curr_cap_vecs, curr_cap_vecs.dtype)
 
             logits, alpha, (hidden_states, cell_states) = self.model(features[:batch_sizes[i]],
                                                                      features_proj[:batch_sizes[i]],
