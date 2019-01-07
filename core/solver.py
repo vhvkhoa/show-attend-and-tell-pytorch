@@ -112,8 +112,6 @@ class CaptioningSolver(object):
         features = features.to(device=self.device)
         seq_lens = seq_lens.to(device=self.device)
 
-        self.optimizer.zero_grad()
-
         cap_vecs, batch_sizes = packed_cap_vecs
         cap_vecs = cap_vecs.to(device=self.device)
         batch_sizes = batch_sizes.to(device=self.device)
@@ -126,6 +124,7 @@ class CaptioningSolver(object):
 
         start_idx = 0
         for i in range(len(batch_sizes)-1):
+            self.optimizer.zero_grad()
             end_idx = start_idx + batch_sizes[i]
             curr_cap_vecs = cap_vecs[start_idx:end_idx]
 
