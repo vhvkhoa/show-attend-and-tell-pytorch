@@ -72,8 +72,8 @@ class CaptioningSolver(object):
         self.beam_decoder = BeamSearchDecoder(self.model, self.beam_size, len(self.word_to_idx), self._start, self._end, self.n_time_steps)
 
         # set an optimizer by update rule
-        for x in self.model.parameters():
-            print(x)
+        for name, param in self.model.named_parameters():
+            print(name, param.size())
         if self.update_rule == 'adam':
             self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
         elif self.update_rule == 'rmsprop':
