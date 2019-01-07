@@ -94,7 +94,6 @@ class CaptioningSolver(object):
         epoch = engine.state.epoch
         loss, acc= engine.state.output
 
-        print(loss, acc)
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
             #if (iteration + 1) % self.eval_every == 0:
