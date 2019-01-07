@@ -111,7 +111,6 @@ class CaptioningSolver(object):
     def _train(self, engine, batch):
         features, packed_cap_vecs, captions, seq_lens = batch
         features = features.to(device=self.device)
-        print(features[:5, :5])
         seq_lens = seq_lens.to(device=self.device)
 
         cap_vecs, batch_sizes = packed_cap_vecs
@@ -135,6 +134,7 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
+            print(curr_cap_vecs, cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             total_loss += loss.item() 
             loss.backward(retain_graph=True)
