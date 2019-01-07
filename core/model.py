@@ -97,7 +97,6 @@ class CaptionGenerator(nn.Module):
         emb_captions = self._word_embedding(inputs=past_captions)
 
         context, alpha = self._attention_layer(features, features_proj, hidden_states)
-        print(alpha)
 
         if self.enable_selector:
             context, beta = self._selector(context, hidden_states)

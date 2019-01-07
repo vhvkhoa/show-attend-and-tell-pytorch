@@ -118,6 +118,7 @@ class CaptioningSolver(object):
         batch_sizes = batch_sizes.to(device=self.device)
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
+        print(features_proj)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
 
         total_loss = 0
