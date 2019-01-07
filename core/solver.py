@@ -94,6 +94,7 @@ class CaptioningSolver(object):
         epoch = engine.state.epoch
         loss = engine.state.output
 
+        print(loss)
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}'.format(epoch, iteration + 1, loss))
             if (iteration + 1) % self.eval_every == 0:
@@ -134,8 +135,8 @@ class CaptioningSolver(object):
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
             loss = self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
-            loss.backward(retain_graph=True)
             total_loss += loss.item() 
+            loss.backward(retain_graph=True)
             self.optimizer.step()
 
             alphas.append(alpha)
@@ -154,6 +155,7 @@ class CaptioningSolver(object):
 
     def train(self, num_epochs=10):
         self.model.train()
+        print(self.model)
         self.train_engine.run(self.train_loader, max_epochs=num_epochs)
 
     def test(self, test_dataset=None, is_validation=False):
