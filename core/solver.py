@@ -123,7 +123,7 @@ class CaptioningSolver(object):
         hidden_states, cell_states = self.model.get_initial_lstm(features)
 
         loss = 0
-        acc = 0
+        acc = 0.
         alphas = []
 
         start_idx = 0
@@ -152,6 +152,7 @@ class CaptioningSolver(object):
         loss.backward()
         self.optimizer.step()
         
+        print(acc)
         return loss.item(), (acc / torch.sum(batch_sizes[1:])).item()
 
     def _test(self, engine, batch_features):
