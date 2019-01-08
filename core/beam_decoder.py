@@ -50,6 +50,7 @@ class BeamSearchDecoder(object):
             k_parent_indices = k_indices // self.vocab_size
 
             # Compute immediate candidate
+            print(done_parent_indices.size())
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
             done_symbols = torch.cat([torch.squeeze(torch.gather(beam_symbols, 1,
                                            done_parent_indices.expand(-1, -1, t + 1)), 1), 
