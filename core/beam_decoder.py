@@ -52,7 +52,7 @@ class BeamSearchDecoder(object):
             # Compute immediate candidate
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
             done_symbols = torch.cat([torch.squeeze(torch.gather(beam_symbols, 1,
-                                      done_parent_indices.view(-1, -1).repeat(1, 1, t + 1)), 1),
+                                      done_parent_indices.view(-1, 1, 1).repeat(1, 1, t + 1)), 1),
                                       torch.full([batch_size, self.n_time_steps - t], self._end, device=self.device)], -1)
 
             print(k_scores[:, -1].size())
