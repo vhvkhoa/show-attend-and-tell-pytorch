@@ -96,8 +96,8 @@ class CaptioningSolver(object):
 
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
-            #if (iteration + 1) % self.eval_every == 0:
-            #    self.test(self.val_loader, is_validation=True)
+            if (iteration + 1) % self.eval_every == 0:
+                self.test(self.val_loader, is_validation=True)
     
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.output
