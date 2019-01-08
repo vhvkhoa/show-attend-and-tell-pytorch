@@ -55,8 +55,12 @@ class BeamSearchDecoder(object):
                                       done_parent_indices.view(-1, 1, 1).repeat(1, 1, t + 1)), 1),
                                       torch.full([batch_size, self.n_time_steps - t], self._end, device=self.device)], -1)
 
-            print(k_scores[:, -1].size())
             cand_mask = (done_scores_max >= k_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
+            print(cand_mask.size())
+            print(done_scores_max.size())
+            print(k_scores[:, -1].size())
+            print(cand_finished.size())
+            print(cand_scores.size())
             cand_finished = cand_mask | cand_finished
             cand_symbols = torch.where(cand_mask, done_symbols, cand_symbols)
             cand_scores = torch.where(cand_mask, done_scores_max, cand_scores)
