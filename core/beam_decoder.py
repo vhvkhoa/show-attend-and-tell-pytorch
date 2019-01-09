@@ -46,9 +46,6 @@ class BeamSearchDecoder(object):
 
             k_scores, k_indices = torch.topk(beam_scores, self.beam_size)
 
-            k_symbol_indices = k_indices % self.vocab_size
-            k_parent_indices = k_indices // self.vocab_size
-
             # Compute immediate candidate
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
             done_symbols = torch.cat([torch.squeeze(torch.gather(beam_symbols, 1,
@@ -62,14 +59,17 @@ class BeamSearchDecoder(object):
             cand_scores = torch.where(cand_mask, done_scores_max, cand_scores)
 
             # Compute beam candidate for next time-step
+            k_symbol_indices = k_indices % self.vocab_size
+            k_parent_indices = torch.unsqueeze(k_indices // self.vocab_size, -1)
+
             past_beam_symbols = torch.gather(beam_symbols, 1, 
-                                             torch.unsqueeze(k_parent_indices, -1).repeat(1, 1, t + 1))
+                                             k_parent_indices.repeat(1, 1, t + 1))
             beam_symbols = torch.cat([past_beam_symbols, torch.unsqueeze(k_symbol_indices, -1)], -1)
 
             hidden_states = torch.gather(hidden_states.view(batch_size, -1, hidden_size), 1, 
-                                    k_parent_indices.expand(-1, -1, hidden_size)).view(-1, hidden_size)
+                                    k_parent_indices.repeat(1, 1, hidden_size)).view(-1, hidden_size)
             cell_states = torch.gather(cell_states.view(batch_size, -1, hidden_size), 1,
-                                    k_parent_indices.expand(-1, -1, hidden_size)).view(-1, hidden_size)
+                                    k_parent_indices.repeat(1, 1, hidden_size)).view(-1, hidden_size)
             beam_inputs = k_symbol_indices.view(-1)
 
         # if not finished, get the best sequence in beam candidate
