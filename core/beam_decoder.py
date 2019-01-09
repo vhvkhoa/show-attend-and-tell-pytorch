@@ -20,8 +20,8 @@ class BeamSearchDecoder(object):
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
-        torch.unsqueeze(hidden_states, 0)
-        torch.unsqueeze(cell_states, 0)
+        hidden_states.unsqueeze_(0)
+        cell_states.unsqueeze_(0)
 
         batch_size, hidden_size = features.size(0), hidden_states.size(-1)
 
