@@ -66,7 +66,7 @@ class CaptioningSolver(object):
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
         self.device = kwargs.pop('device', 'cuda:1')
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=self.pack_collate_fn)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
 
         self.beam_decoder = BeamSearchDecoder(self.model, self.device, self.beam_size, len(self.word_to_idx), self._start, self._end, self.n_time_steps)
