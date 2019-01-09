@@ -28,7 +28,7 @@ class BeamSearchDecoder(object):
         cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, device=self.device)
         cand_finished = torch.zeros(batch_size, dtype=torch.uint8, device=self.device)
 
-        beam_symbols = torch.full([batch_size, 1, 1], self._start, device=self.device)
+        beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int64, device=self.device)
         beam_inputs = torch.full([batch_size], self._start, dtype=torch.int64, device=self.device)
         beam_scores = torch.zeros(batch_size, self.vocab_size, device=self.device)
 
@@ -60,7 +60,6 @@ class BeamSearchDecoder(object):
 
             # Compute beam candidate for next time-step
             k_symbol_indices = k_indices % self.vocab_size
-            print(k_indices.dtype, k_symbol_indices.dtype)
             k_parent_indices = torch.unsqueeze(k_indices // self.vocab_size, -1)
 
             past_beam_symbols = torch.gather(beam_symbols, 1, 
