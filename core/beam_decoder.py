@@ -60,6 +60,7 @@ class BeamSearchDecoder(object):
 
             # Compute beam candidate for next time-step
             k_symbol_indices = k_indices % self.vocab_size
+            print(k_indices.dtype, k_symbol_indices.dtype)
             k_parent_indices = torch.unsqueeze(k_indices // self.vocab_size, -1)
 
             past_beam_symbols = torch.gather(beam_symbols, 1, 
