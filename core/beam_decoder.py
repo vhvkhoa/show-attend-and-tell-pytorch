@@ -25,7 +25,7 @@ class BeamSearchDecoder(object):
         hidden_size = hidden_states.size(-1)
 
         cand_scores = torch.zeros(batch_size, device=self.device)
-        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, device=self.device)
+        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, dtype=torch.int64, device=self.device)
         cand_finished = torch.zeros(batch_size, dtype=torch.uint8, device=self.device)
 
         beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int64, device=self.device)
