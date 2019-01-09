@@ -78,7 +78,7 @@ class BeamSearchDecoder(object):
             beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
 
             k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1)
-            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(i, 1, 1, hidden_size))
+            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(1, 1, 1, hidden_size))
             cell_states = torch.gather(beam_cell_states, 1, k_parent_indices.repeat(1, 1, 1, hidden_size))
             beam_inputs = k_symbol_indices
 
