@@ -67,14 +67,14 @@ class CaptionGenerator(nn.Module):
         return embed_inputs
 
     def _attention_layer(self, features, features_proj, hidden_states):
-        h_att = F.relu(features_proj + self.hidden_to_attention_layer(hidden_states.squeeze(0)).unsqueeze(1))    # (N, L, D)
+        h_att = F.relu(features_proj + self.hidden_to_attention_layer(hidden_states[-1]).unsqueeze(1))    # (N, L, D)
         out_att = self.attention_layer(h_att.view(-1, self.D)).view(-1, self.L)   # (N, L)
         alpha = F.softmax(out_att, dim=-1)
         context = torch.sum(features * alpha.unsqueeze(2), 1)   #(N, D)
         return context, alpha
 
-    def _selector(self, context, hidden_state):
-        beta = torch.sigmoid(self.selector_layer(hidden_state.squeeze(0)))    # (N, 1)
+    def _selector(self, context, hidden_states):
+        beta = torch.sigmoid(self.selector_layer(hidden_states[-1]))    # (N, 1)
         context = context * beta
         return context, beta
 

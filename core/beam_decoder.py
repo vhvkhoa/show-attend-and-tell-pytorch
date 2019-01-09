@@ -20,10 +20,8 @@ class BeamSearchDecoder(object):
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
-        print(hidden_states.size())
-        print(cell_states.size())
-        torch.unsqueeze(hidden_states, 1)
-        torch.unsqueeze(cell_states, 1)
+        torch.unsqueeze(hidden_states, 0)
+        torch.unsqueeze(cell_states, 0)
 
         batch_size, hidden_size = features.size(0), hidden_states.size(-1)
 
@@ -41,16 +39,14 @@ class BeamSearchDecoder(object):
             for b in range(beam_size):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
-                                                                        beam_inputs[:, b],
-                                                                        hidden_states[:, b],
-                                                                        cell_states[:, b])
+                                                                        beam_inputs[:, , b],
+                                                                        hidden_states[b],
+                                                                        cell_states[b])
                 beam_logits.append(logits)
                 beam_hidden_states.append(hidden_states)
                 beam_cell_states.append(cell_states)
 
             beam_logits = torch.flatten(torch.stack(beam_logits, 1), end_dim=1)
-            beam_hidden_states = torch.flatten(torch.stack(beam_hidden_states, 1), end_dim=1)
-            beam_cell_states = torch.flatten(torch.stack(beam_cell_states, 1), end_dim=1)
         
             beam_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = beam_scores[:, self._end].view(batch_size, -1)
@@ -61,8 +57,8 @@ class BeamSearchDecoder(object):
 
             # Compute immediate candidate
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
-            done_symbols = torch.cat([torch.squeeze(torch.gather(beam_symbols, 1,
-                                      done_parent_indices.view(-1, 1, 1).repeat(1, 1, t + 1)), 1),
+            done_symbols = torch.cat([torch.gather(beam_symbols, 1,
+                                      done_parent_indices.view(-1, 1, 1).repeat(1, 1, t + 1)).squeeze(1),
                                       torch.full([batch_size, self.n_time_steps - t], 
                                             self._end, dtype=torch.int64, device=self.device)], -1)
 
@@ -74,14 +70,15 @@ class BeamSearchDecoder(object):
 
             # Compute beam candidate for next time-step
             k_symbol_indices = k_indices % self.vocab_size
-            k_parent_indices = torch.unsqueeze(k_indices // self.vocab_size, -1)
+            k_parent_indices = k_indices // self.vocab_size
 
-            past_beam_symbols = torch.gather(beam_symbols, 1, 
-                                             k_parent_indices.repeat(1, 1, t + 1))
-            beam_symbols = torch.cat([past_beam_symbols, torch.unsqueeze(k_symbol_indices, -1)], -1)
+            past_beam_symbols = torch.gather(beam_symbols, 1,
+                                             k_parent_indices.unsqueeze(-1).repeat(1, 1, t + 1))
+            beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
 
-            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(1, 1, hidden_size))
-            cell_states = torch.gather(beam_cell_states, 1, k_parent_indices.repeat(1, 1, hidden_size))
+            k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1)
+            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(i, 1, 1, hidden_size))
+            cell_states = torch.gather(beam_cell_states, 1, k_parent_indices.repeat(1, 1, 1, hidden_size))
             beam_inputs = k_symbol_indices
 
         # if not finished, get the best sequence in beam candidate
