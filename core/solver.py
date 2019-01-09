@@ -15,6 +15,19 @@ from .utils import *
 from .dataset import CocoCaptionDataset
 from .beam_decoder import BeamSearchDecoder 
 
+def pack_collate_fn(batch):
+    features, cap_vecs, captions = zip(*batch)
+
+    len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]), reverse=True)
+    len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
+    len_sorted_features = torch.tensor([features[i] for i in len_sorted_idx])
+    len_sorted_captions = [captions[i] for i in len_sorted_idx]
+    seq_lens = torch.tensor([len(cap_vec) for cap_vec in len_sorted_cap_vecs], dtype=torch.float)
+
+    packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec) for cap_vec in len_sorted_cap_vecs])
+
+    return len_sorted_features, packed_cap_vecs, len_sorted_captions, seq_lens
+
 class CaptioningSolver(object):
     def __init__(self, model, word_to_idx, train_dataset, val_dataset, **kwargs):
         """
@@ -76,19 +89,6 @@ class CaptioningSolver(object):
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
     
-    def pack_collate_fn(self, batch):
-        features, cap_vecs, captions = zip(*batch)
-
-        len_sorted_idx = sorted(range(len(cap_vecs)), key=lambda x: len(cap_vecs[x]), reverse=True)
-        len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
-        len_sorted_features = torch.tensor([features[i] for i in len_sorted_idx], device=self.device)
-        len_sorted_captions = [captions[i] for i in len_sorted_idx]
-        seq_lens = torch.tensor([len(cap_vec) for cap_vec in len_sorted_cap_vecs], dtype=torch.float, device=self.device)
-
-        packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec, device=self.device) for cap_vec in len_sorted_cap_vecs])
-
-        return len_sorted_features, packed_cap_vecs, len_sorted_captions, seq_lens
-
     def training_end_iter_handler(self, engine):
         iteration = engine.state.iteration
         epoch = engine.state.epoch
