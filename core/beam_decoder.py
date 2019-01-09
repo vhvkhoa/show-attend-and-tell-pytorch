@@ -20,26 +20,37 @@ class BeamSearchDecoder(object):
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
+        torch.unsqueeze(hidden_states, 1)
+        torch.unsqueeze(cell_states, 1)
 
-        batch_size = features.size(0)
-        hidden_size = hidden_states.size(-1)
+        batch_size, hidden_size = features.size(0), hidden_states.size(-1)
 
         cand_scores = torch.zeros(batch_size, device=self.device)
         cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, dtype=torch.int64, device=self.device)
         cand_finished = torch.zeros(batch_size, dtype=torch.uint8, device=self.device)
 
         beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int64, device=self.device)
-        beam_inputs = torch.full([batch_size], self._start, dtype=torch.int64, device=self.device)
+        beam_inputs = torch.full([batch_size, 1], self._start, dtype=torch.int64, device=self.device)
         beam_scores = torch.zeros(batch_size, self.vocab_size, device=self.device)
 
         for t in range(self.n_time_steps):
-            logits, alpha, (hidden_states, cell_states) = self.model(features,
-                                                                     features_proj,
-                                                                     beam_inputs,
-                                                                     hidden_states,
-                                                                     cell_states)
+            beam_size = beam_inputs.size(1)
+            beam_logits, beam_hidden_states, beam_cell_states = [], [], [] 
+            for b in beam_size:
+                logits, alpha, (hidden_states, cell_states) = self.model(features,
+                                                                        features_proj,
+                                                                        beam_inputs[:, b],
+                                                                        hidden_states[:, b],
+                                                                        cell_states[:, b])
+                beam_logits.append(logits)
+                beam_hidden_states.append(hidden_states)
+                beam_cell_states.append(cell_states)
+
+            beam_logits = torch.flatten(torch.stack(beam_logits, 1), end_dim=1)
+            beam_hidden_states = torch.flatten(torch.stack(beam_hidden_states, 1), end_dim=1)
+            beam_cell_states = torch.flatten(torch.stack(beam_cell_states, 1), end_dim=1)
         
-            beam_scores = self.compute_score(logits, beam_scores)
+            beam_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = beam_scores[:, self._end].view(batch_size, -1)
             beam_scores = torch.cat([beam_scores[:, :self._end],
                                        beam_scores[:, self._end:]], 1).view(batch_size, -1)
@@ -67,11 +78,9 @@ class BeamSearchDecoder(object):
                                              k_parent_indices.repeat(1, 1, t + 1))
             beam_symbols = torch.cat([past_beam_symbols, torch.unsqueeze(k_symbol_indices, -1)], -1)
 
-            hidden_states = torch.gather(hidden_states.view(batch_size, -1, hidden_size), 1, 
-                                    k_parent_indices.repeat(1, 1, hidden_size)).view(-1, hidden_size)
-            cell_states = torch.gather(cell_states.view(batch_size, -1, hidden_size), 1,
-                                    k_parent_indices.repeat(1, 1, hidden_size)).view(-1, hidden_size)
-            beam_inputs = k_symbol_indices.view(-1)
+            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(1, 1, hidden_size))
+            cell_states = torch.gather(beam_cell_states, 1, k_parent_indices.repeat(1, 1, hidden_size))
+            beam_inputs = k_symbol_indices
 
         # if not finished, get the best sequence in beam candidate
         best_beam_symbols = beam_symbols[:, 0, :]
