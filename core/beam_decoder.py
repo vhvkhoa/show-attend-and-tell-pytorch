@@ -63,7 +63,7 @@ class BeamSearchDecoder(object):
 
             # Compute beam candidate for next time-step
             past_beam_symbols = torch.gather(beam_symbols, 1, 
-                                             k_parent_indices.expand(-1, -1, t + 1))
+                                             torch.unsqueeze(k_parent_indices, -1).repeat(1, 1, t + 1))
             beam_symbols = torch.cat([past_beam_symbols, torch.unsqueeze(k_symbol_indices, -1)], -1)
 
             hidden_states = torch.gather(hidden_states.view(batch_size, -1, hidden_size), 1, 
