@@ -36,7 +36,8 @@ class BeamSearchDecoder(object):
         for t in range(self.n_time_steps):
             beam_size = beam_inputs.size(1)
             beam_logits, beam_hidden_states, beam_cell_states = [], [], [] 
-            print(hidden_states.size(), cell_states.size())
+            print(beam_inputs.size(), hidden_states.size(), cell_states.size())
+            print(beam_size())
             for b in range(beam_size):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
