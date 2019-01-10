@@ -13,6 +13,7 @@ class BeamSearchDecoder(object):
         self.n_time_steps = n_time_steps
     
     def compute_score(self, logits, beam_logprobs):
+        print(logits.size(), beam_logprobs.size())
         return F.log_softmax(torch.squeeze(logits), dim=-1) + beam_logprobs
     
     def decode(self, features):
@@ -36,8 +37,6 @@ class BeamSearchDecoder(object):
         for t in range(self.n_time_steps):
             beam_size = beam_inputs.size(1)
             beam_logits, next_beam_hidden_states, next_beam_cell_states= [], [], [] 
-            print(beam_inputs.size(), beam_hidden_states.size(), beam_cell_states.size())
-            print(beam_size)
             for b in range(beam_size):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
