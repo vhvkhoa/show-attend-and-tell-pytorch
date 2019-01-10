@@ -23,7 +23,7 @@ class BeamSearchDecoder(object):
         hidden_states.unsqueeze_(0)
         cell_states.unsqueeze_(0)
 
-        batch_size, hidden_size = features.size(0), hidden_states.size(-1)
+        batch_size, hidden_layers, hidden_size = features.size(0), hidden_states.size(0), hidden_states.size(-1)
 
         cand_scores = torch.zeros(batch_size, device=self.device)
         cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, dtype=torch.int64, device=self.device)
@@ -80,7 +80,8 @@ class BeamSearchDecoder(object):
                                              k_parent_indices.unsqueeze(-1).repeat(1, 1, t + 1))
             beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
 
-            k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1)
+            k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1).repeat(1, hidden_layers, 1, hidden_size)
+            print(beam_hidden_states.size(), k_parent_indices.size())
             hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices.repeat(1, 1, 1, hidden_size))
             cell_states = torch.gather(beam_cell_states, 1, k_parent_indices.repeat(1, 1, 1, hidden_size))
             beam_inputs = k_symbol_indices
