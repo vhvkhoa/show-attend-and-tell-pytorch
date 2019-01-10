@@ -37,7 +37,6 @@ class BeamSearchDecoder(object):
             beam_size = beam_inputs.size(1)
             beam_logits, beam_hidden_states, beam_cell_states = [], [], [] 
             for b in range(beam_size):
-                print(features_proj.size(), hidden_states.size())
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
                                                                         beam_inputs[:, b],
@@ -81,9 +80,8 @@ class BeamSearchDecoder(object):
             beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
 
             k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1).repeat(1, hidden_layers, 1, hidden_size)
-            print(beam_hidden_states.size(), k_parent_indices.size())
-            hidden_states = torch.gather(beam_hidden_states, 1, k_parent_indices)
-            cell_states = torch.gather(beam_cell_states, 1, k_parent_indices)
+            hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
+            cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
             beam_inputs = k_symbol_indices
 
         # if not finished, get the best sequence in beam candidate
