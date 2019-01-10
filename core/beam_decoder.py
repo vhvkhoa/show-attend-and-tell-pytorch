@@ -20,8 +20,8 @@ class BeamSearchDecoder(object):
         features = self.model.batch_norm(features)
         features_proj = self.model.project_features(features)
         hidden_states, cell_states = self.model.get_initial_lstm(features)
-        hidden_states.unsqueeze_(0)
-        cell_states.unsqueeze_(0)
+        beam_hidden_states = hidden_states.unsqueeze(0)
+        beam_cell_states = cell_states.unsqueeze(0)
 
         batch_size, hidden_layers, hidden_size = features.size(0), hidden_states.size(0), hidden_states.size(-1)
 
@@ -42,8 +42,8 @@ class BeamSearchDecoder(object):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
                                                                         beam_inputs[:, b],
-                                                                        hidden_states[b],
-                                                                        cell_states[b])
+                                                                        beam_hidden_states[b],
+                                                                        beam_cell_states[b])
                 beam_logits.append(logits)
                 beam_hidden_states.append(hidden_states)
                 beam_cell_states.append(cell_states)
@@ -82,8 +82,8 @@ class BeamSearchDecoder(object):
             beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
 
             k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1).repeat(1, hidden_layers, 1, hidden_size)
-            hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
-            cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
+            beam_hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
+            beam_cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
             beam_inputs = k_symbol_indices
 
         # if not finished, get the best sequence in beam candidate
