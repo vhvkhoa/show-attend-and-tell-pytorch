@@ -82,6 +82,7 @@ class BeamSearchDecoder(object):
             k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1).repeat(1, hidden_layers, 1, hidden_size)
             hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
             cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
+            print(hidden_states.size(), cell_states.size())
             beam_inputs = k_symbol_indices
 
         # if not finished, get the best sequence in beam candidate
