@@ -48,6 +48,9 @@ class BeamSearchDecoder(object):
                 beam_cell_states.append(cell_states)
 
             beam_logits = torch.flatten(torch.stack(beam_logits, 1), end_dim=1)
+            beam_hidden_states = torch.stack(beam_hidden_states)
+            beam_cell_states = torch.stack(beam_cell_states)
+
         
             beam_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = beam_scores[:, self._end].view(batch_size, -1)
