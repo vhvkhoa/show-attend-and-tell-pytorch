@@ -13,7 +13,6 @@ class BeamSearchDecoder(object):
         self.n_time_steps = n_time_steps
     
     def compute_score(self, logits, beam_scores):
-        print(logits.size(), beam_scores.size())
         return F.log_softmax(logits, dim=-1) + beam_scores.unsqueeze(-1)
     
     def decode(self, features):
@@ -69,6 +68,7 @@ class BeamSearchDecoder(object):
             cand_mask = (done_scores_max >= beam_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
             cand_finished = cand_mask | cand_finished
             cand_mask = cand_mask.unsqueeze(-1)
+            print(cand_mask.size(), done_symbols.size(), cand_symbols.size())
             cand_symbols = torch.where(cand_mask, done_symbols, cand_symbols)
             cand_scores = torch.where(cand_mask, done_scores_max, cand_scores)
 
