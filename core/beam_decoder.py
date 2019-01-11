@@ -67,10 +67,7 @@ class BeamSearchDecoder(object):
 
             cand_mask = (done_scores_max >= beam_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
             cand_finished = cand_mask | cand_finished
-            cand_mask = cand_mask.unsqueeze(-1)
-            print(cand_mask.size, done_symbols.size(), cand_symbols.size())
-            cand_symbols = torch.where(cand_mask, done_symbols, cand_symbols)
-            print(cand_mask.size, done_scores_max.size(), cand_scores.size())
+            cand_symbols = torch.where(cand_mask.unsqueeze(-1), done_symbols, cand_symbols)
             cand_scores = torch.where(cand_mask, done_scores_max, cand_scores)
 
             # Compute beam candidate for next time-step
