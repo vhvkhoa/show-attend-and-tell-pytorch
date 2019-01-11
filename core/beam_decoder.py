@@ -25,13 +25,13 @@ class BeamSearchDecoder(object):
 
         batch_size, hidden_layers, hidden_size = features.size(0), hidden_states.size(0), hidden_states.size(-1)
 
-        cand_scores = torch.zeros(batch_size, device=self.device)
-        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, dtype=torch.int64, device=self.device)
-        cand_finished = torch.zeros(batch_size, dtype=torch.uint8, device=self.device)
+        cand_scores = torch.zeros(batch_size)
+        cand_symbols = torch.full([batch_size, self.n_time_steps + 1], self._start, dtype=torch.int32, device=self.device)
+        cand_finished = torch.zeros(batch_size, dtype=torch.uint8)
 
-        beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int64, device=self.device)
-        beam_inputs = torch.full([batch_size, 1], self._start, dtype=torch.int64, device=self.device)
-        beam_scores = torch.zeros(batch_size, 1, device=self.device)
+        beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int32)
+        beam_inputs = torch.full([batch_size, 1], self._start, dtype=torch.int32, device=self.device)
+        beam_scores = torch.zeros(batch_size, 1)
 
         for t in range(self.n_time_steps):
             print(t)
@@ -41,15 +41,15 @@ class BeamSearchDecoder(object):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
                                                                         beam_inputs[:, b],
-                                                                        beam_hidden_states[b],
-                                                                        beam_cell_states[b])
+                                                                        beam_hidden_states[b].to(self.device),
+                                                                        beam_cell_states[b].to(self.device))
                 beam_logits.append(logits)
                 next_beam_hidden_states.append(hidden_states)
                 next_beam_cell_states.append(cell_states)
 
-            beam_logits = torch.stack(beam_logits, 1)
-            beam_hidden_states = torch.stack(next_beam_hidden_states)
-            beam_cell_states = torch.stack(next_beam_cell_states)
+            beam_logits = torch.stack(beam_logits, 1).cpu()
+            beam_hidden_states = torch.stack(next_beam_hidden_states).cpu()
+            beam_cell_states = torch.stack(next_beam_cell_states).cpu()
 
             symbols_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = symbols_scores[:, :, self._end]
@@ -82,6 +82,7 @@ class BeamSearchDecoder(object):
             beam_hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
             beam_cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
             beam_inputs = k_symbol_indices
+            torch.cuda.empty_cache()
 
         # if not finished, get the best sequence in beam candidate
         best_beam_symbols = beam_symbols[:, 0, :]
