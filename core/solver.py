@@ -48,7 +48,7 @@ class CaptioningSolver(object):
         self._start = word_to_idx['<START>']
         self._null = word_to_idx['<NULL>']
         self._end = word_to_idx['<END>']
-        self.idx_to_word = {i: w for w, i in word_to_idx.iteritems()}
+        self.idx_to_word = {i: w for w, i in word_to_idx.items()}
 
         self.n_time_steps = kwargs.pop('n_time_steps', 31)
         self.batch_size = kwargs.pop('batch_size', 100)
