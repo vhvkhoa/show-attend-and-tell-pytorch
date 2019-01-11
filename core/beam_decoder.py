@@ -43,13 +43,13 @@ class BeamSearchDecoder(object):
                                                                         beam_inputs[:, b],
                                                                         beam_hidden_states[b].to(self.device),
                                                                         beam_cell_states[b].to(self.device))
-                beam_logits.append(logits)
-                next_beam_hidden_states.append(hidden_states)
-                next_beam_cell_states.append(cell_states)
+                beam_logits.append(logits.detach().cpu())
+                next_beam_hidden_states.append(hidden_states.detach().cpu())
+                next_beam_cell_states.append(cell_states.detach().cpu())
 
-            beam_logits = torch.stack(beam_logits, 1).cpu()
-            beam_hidden_states = torch.stack(next_beam_hidden_states).cpu()
-            beam_cell_states = torch.stack(next_beam_cell_states).cpu()
+            beam_logits = torch.stack(beam_logits, 1)
+            beam_hidden_states = torch.stack(next_beam_hidden_states)
+            beam_cell_states = torch.stack(next_beam_cell_states)
 
             symbols_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = symbols_scores[:, :, self._end]
