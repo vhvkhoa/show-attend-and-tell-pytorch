@@ -32,7 +32,7 @@ class BeamSearchDecoder(object):
 
         beam_symbols = torch.full([batch_size, 1, 1], self._start, dtype=torch.int64, device=self.device)
         beam_inputs = torch.full([batch_size, 1], self._start, dtype=torch.int64, device=self.device)
-        beam_scores = torch.zeros(1, batch_size, self.vocab_size, device=self.device)
+        beam_scores = torch.zeros(batch_size, 1, device=self.device)
 
         for t in range(self.n_time_steps):
             beam_size = beam_inputs.size(1)
@@ -47,17 +47,17 @@ class BeamSearchDecoder(object):
                 next_beam_hidden_states.append(hidden_states)
                 next_beam_cell_states.append(cell_states)
 
-            beam_logits = torch.stack(beam_logits)
+            beam_logits = torch.stack(beam_logits, 1)
             beam_hidden_states = torch.stack(next_beam_hidden_states)
             beam_cell_states = torch.stack(next_beam_cell_states)
 
         
-            next_beam_scores = self.compute_score(beam_logits, beam_scores)
-            end_scores = next_beam_scores[:, self._end].view(batch_size, -1)
-            beam_scores_no_end = torch.cat([next_beam_scores[:, :self._end],
-                                       next_beam_scores[:, self._end + 1:]], 1).view(batch_size, -1)
+            symbols_scores = self.compute_score(beam_logits, beam_scores)
+            end_scores = symbols_scores[:, :, self._end]
+            symbols_scores_no_end = torch.cat([symbols_scores[:, :, :self._end],
+                                       symbols_scores[:, :, self._end + 1:]], 2).view(batch_size, -1)
 
-            k_scores, k_indices = torch.topk(beam_scores_no_end, self.beam_size)
+            beam_scores, k_indices = torch.topk(symbols_scores_no_end, self.beam_size)
 
             # Compute immediate candidate
             done_scores_max, done_parent_indices = torch.max(end_scores, -1)
@@ -66,7 +66,7 @@ class BeamSearchDecoder(object):
                                       torch.full([batch_size, self.n_time_steps - t], 
                                             self._end, dtype=torch.int64, device=self.device)], -1)
 
-            cand_mask = (done_scores_max >= k_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
+            cand_mask = (done_scores_max >= beam_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
             cand_finished = cand_mask | cand_finished
             cand_mask = cand_mask.unsqueeze(-1)
             cand_symbols = torch.where(cand_mask, done_symbols, cand_symbols)
@@ -79,7 +79,6 @@ class BeamSearchDecoder(object):
             past_beam_symbols = torch.gather(beam_symbols, 1,
                                              k_parent_indices.unsqueeze(-1).repeat(1, 1, t + 1))
             beam_symbols = torch.cat([past_beam_symbols, k_symbol_indices.unsqueeze(-1)], -1)
-            beam_scores = torch.gather(next_beam_scores, 0, k_parent_indices.t().unsqueeze(-1).repeat(1, 1, self.vocab_size))
 
             k_parent_indices = k_parent_indices.t().unsqueeze(1).unsqueeze(-1).repeat(1, hidden_layers, 1, hidden_size)
             beam_hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
