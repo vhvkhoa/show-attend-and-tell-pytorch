@@ -34,7 +34,6 @@ class BeamSearchDecoder(object):
         beam_scores = torch.zeros(batch_size, 1)
 
         for t in range(self.n_time_steps):
-            print(t)
             beam_size = beam_inputs.size(1)
             beam_logits, next_beam_hidden_states, next_beam_cell_states= [], [], [] 
             for b in range(beam_size):
@@ -86,7 +85,6 @@ class BeamSearchDecoder(object):
 
         # if not finished, get the best sequence in beam candidate
         best_beam_symbols = beam_symbols[:, 0]
-        print(best_beam_symbols.size(), cand_symbols.size(), cand_finished.size())
-        cand_symbols = torch.where(cand_finished, cand_symbols, best_beam_symbols)
+        cand_symbols = torch.where(cand_finished.unsqueeze(-1), cand_symbols, best_beam_symbols)
 
         return cand_symbols
