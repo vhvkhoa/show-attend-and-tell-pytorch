@@ -152,8 +152,7 @@ class CaptioningSolver(object):
 
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
-        cap_vec = cap_vecs.data.cpu().numpy()
-        return decode_captions(cap_vecs, self.word_to_idx)
+        return decode_captions(cap_vecs.numpy(), self.word_to_idx)
 
     def train(self, num_epochs=10):
         self.model.train()
