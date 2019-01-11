@@ -45,10 +45,10 @@ class CaptioningSolver(object):
         """
 
         self.model = model
-        self.word_to_idx = word_to_idx
         self._start = word_to_idx['<START>']
         self._null = word_to_idx['<NULL>']
         self._end = word_to_idx['<END>']
+        self.idx_to_word = {i: w for w, i in word_to_idx.iteritems()}
 
         self.n_time_steps = kwargs.pop('n_time_steps', 31)
         self.batch_size = kwargs.pop('batch_size', 100)
@@ -69,7 +69,7 @@ class CaptioningSolver(object):
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
 
-        self.beam_decoder = BeamSearchDecoder(self.model, self.device, self.beam_size, len(self.word_to_idx), self._start, self._end, self.n_time_steps)
+        self.beam_decoder = BeamSearchDecoder(self.model, self.device, self.beam_size, len(self.idx_to_word), self._start, self._end, self.n_time_steps)
 
         # set an optimizer by update rule
         if self.update_rule == 'adam':
@@ -152,7 +152,7 @@ class CaptioningSolver(object):
 
     def _test(self, engine, batch_features):
         cap_vecs = self.beam_decoder.decode(batch_features)
-        return decode_captions(cap_vecs.numpy(), self.word_to_idx)
+        return decode_captions(cap_vecs.numpy(), self.idx_to_word)
 
     def train(self, num_epochs=10):
         self.model.train()

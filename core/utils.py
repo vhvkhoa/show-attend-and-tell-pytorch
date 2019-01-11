@@ -22,7 +22,6 @@ def decode_captions(captions, idx_to_word):
             if captions.ndim == 1:
                 word = idx_to_word[captions[t]]
             else:
-                print(captions.shape)
                 word = idx_to_word[captions[i, t]]
             if word == '<END>':
                 words.append('.')
