@@ -85,7 +85,8 @@ class BeamSearchDecoder(object):
             torch.cuda.empty_cache()
 
         # if not finished, get the best sequence in beam candidate
-        best_beam_symbols = beam_symbols[:, 0, :]
+        best_beam_symbols = beam_symbols[:, 0]
+        print(best_beam_symbols.size(), cand_symbols.size(), cand_finished.size())
         cand_symbols = torch.where(cand_finished, cand_symbols, best_beam_symbols)
 
         return cand_symbols
