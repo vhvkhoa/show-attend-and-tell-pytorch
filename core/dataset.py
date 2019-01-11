@@ -29,23 +29,25 @@ class CocoCaptionDataset(Dataset):
         self.split = split
         with open(caption_file, 'r') as f:
             dataset = json.load(f)
-        self.annotations = dataset['annotations']
         if split == 'train':
+            self.dataset = dataset['annotations']
             self.word_to_idx = json.load(open('data/word_to_idx.json', 'r'))
+        else:
+            self.dataset = dataset['images']
     
     def __getitem__(self, index):
-        annotation = self.annotations[index]
-        feature_path = os.path.join('data', self.split, 'feats', annotation['file_name'] + '.npy')
+        dataset = self.dataset[index]
+        feature_path = os.path.join('data', self.split, 'feats', dataset['file_name'] + '.npy')
         feature = np.load(feature_path)
         
         if self.split == 'train':
-            caption = annotation['caption']
-            cap_vec = annotation['vector']
+            caption = dataset['caption']
+            cap_vec = dataset['vector']
             return feature, cap_vec, caption
         return feature
 
     def __len__(self, ):
-        return len(self.annotations)
+        return len(self.dataset)
 
     def get_vocab_dict(self):
         return self.word_to_idx
