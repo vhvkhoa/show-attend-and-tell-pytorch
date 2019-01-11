@@ -63,7 +63,7 @@ class BeamSearchDecoder(object):
             done_symbols = torch.cat([torch.gather(beam_symbols, 1,
                                       done_parent_indices.view(-1, 1, 1).repeat(1, 1, t + 1)).squeeze(1),
                                       torch.full([batch_size, self.n_time_steps - t], 
-                                            self._end, dtype=torch.int64, device=self.device)], -1)
+                                            self._end, dtype=torch.int64)], -1)
 
             cand_mask = (done_scores_max >= beam_scores[:, -1]) & (~cand_finished | (done_scores_max > cand_scores))
             cand_finished = cand_mask | cand_finished
