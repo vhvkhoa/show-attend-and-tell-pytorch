@@ -34,6 +34,7 @@ class BeamSearchDecoder(object):
         beam_scores = torch.zeros(batch_size, 1, device=self.device)
 
         for t in range(self.n_time_steps):
+            print(t)
             beam_size = beam_inputs.size(1)
             beam_logits, next_beam_hidden_states, next_beam_cell_states= [], [], [] 
             for b in range(beam_size):
@@ -50,7 +51,6 @@ class BeamSearchDecoder(object):
             beam_hidden_states = torch.stack(next_beam_hidden_states)
             beam_cell_states = torch.stack(next_beam_cell_states)
 
-        
             symbols_scores = self.compute_score(beam_logits, beam_scores)
             end_scores = symbols_scores[:, :, self._end]
             symbols_scores_no_end = torch.cat([symbols_scores[:, :, :self._end],
