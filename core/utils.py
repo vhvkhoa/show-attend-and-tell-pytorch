@@ -17,6 +17,7 @@ def decode_captions(captions, idx_to_word):
 
     decoded = []
     for i in range(N):
+        print(i)
         words = []
         for t in range(T):
             if captions.ndim == 1:

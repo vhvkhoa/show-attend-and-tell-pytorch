@@ -88,7 +88,7 @@ class CaptioningSolver(object):
             os.makedirs(self.checkpoint_dir)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
-    
+            
     def training_end_iter_handler(self, engine):
         iteration = engine.state.iteration
         epoch = engine.state.epoch
