@@ -14,7 +14,7 @@ class BeamSearchDecoder(object):
     
     def compute_score(self, logits, beam_scores):
         print(logits.size(), beam_scores.size())
-        return (F.log_softmax(logits, dim=-1) + beam_scores).view(-1, self.vocab_size)
+        return F.log_softmax(logits, dim=-1) + beam_scores.unsqueeze(-1)
     
     def decode(self, features):
         features = features.to(device=self.device)
