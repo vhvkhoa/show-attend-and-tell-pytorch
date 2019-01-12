@@ -106,13 +106,15 @@ class CaptioningSolver(object):
 
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.output
-        print(os.getcwd())
-        save_json(captions, './data/%s/%s.candidate.captions.json')
 
         if is_val: 
+            save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
             caption_scores = evaluate(get_scores=True)
             write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
         
+        else:
+            save_json(captions, './data/%s/%s.candidate.captions.json' % ('test', 'test'))
+
     def _train(self, engine, batch):
         self.optimizer.zero_grad()
 
