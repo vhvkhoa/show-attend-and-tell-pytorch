@@ -106,7 +106,7 @@ class CaptioningSolver(object):
 
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.output
-        print(captions[:5])
+        print(os.getcwd())
         save_json(captions, './data/%s/%s.candidate.captions.json')
 
         if is_val: 
