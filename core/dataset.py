@@ -44,7 +44,7 @@ class CocoCaptionDataset(Dataset):
             caption = item['caption']
             cap_vec = item['vector']
             return feature, cap_vec, caption
-        return feature, item['image_id']
+        return feature, item['id']
 
     def __len__(self, ):
         return len(self.dataset)

@@ -84,6 +84,7 @@ class CaptioningSolver(object):
         self.test_engine = Engine(self._test)
 
         self.train_engine.add_event_handler(Events.ITERATION_COMPLETED, self.training_end_iter_handler)
+        self.test_engine.add_event_handler(Events.EPOCH_STARTED, self.testing_start_epoch_handler)
         self.test_engine.add_event_handler(Events.ITERATION_COMPLETED, self.testing_end_iter_handler)
 
         if not os.path.exists(self.checkpoint_dir):
