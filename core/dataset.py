@@ -36,15 +36,15 @@ class CocoCaptionDataset(Dataset):
             self.dataset = dataset['images']
     
     def __getitem__(self, index):
-        dataset = self.dataset[index]
-        feature_path = os.path.join('data', self.split, 'feats', dataset['file_name'] + '.npy')
+        item = self.dataset[index]
+        feature_path = os.path.join('data', self.split, 'feats', item['file_name'] + '.npy')
         feature = np.load(feature_path)
         
         if self.split == 'train':
-            caption = dataset['caption']
-            cap_vec = dataset['vector']
+            caption = item['caption']
+            cap_vec = item['vector']
             return feature, cap_vec, caption
-        return feature
+        return feature, item['image_id']
 
     def __len__(self, ):
         return len(self.dataset)

@@ -101,20 +101,6 @@ class CaptioningSolver(object):
             if (iteration + 1) % self.eval_every == 0:
                 self.test(self.val_loader, is_validation=True)
     
-    def testing_end_iter_handler(self, engine):
-        print(engine.state.iteration)
-
-    def testing_end_epoch_handler(self, engine, is_val):
-        captions = engine.state.output
-
-        if is_val: 
-            save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
-            caption_scores = evaluate(get_scores=True)
-            write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
-        
-        else:
-            save_json(captions, './data/%s/%s.candidate.captions.json' % ('test', 'test'))
-
     def _train(self, engine, batch):
         self.optimizer.zero_grad()
 
@@ -157,10 +143,29 @@ class CaptioningSolver(object):
         self.optimizer.step()
 
         return loss.item(), float(acc.item()) / float(torch.sum(batch_sizes[1:]).item())
+    
+    def testing_start_epoch_handler(self, engine):
+        engine.state.captions = []
 
-    def _test(self, engine, batch_features):
-        cap_vecs = self.beam_decoder.decode(batch_features)
-        return decode_captions(cap_vecs.numpy(), self.idx_to_word)
+    def testing_end_iter_handler(self, engine):
+        print(engine.state.iteration)
+
+    def testing_end_epoch_handler(self, engine, is_val):
+        captions = engine.state.captions
+        if is_val: 
+            save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
+            caption_scores = evaluate(get_scores=True)
+            write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
+        
+        else:
+            save_json(captions, './data/%s/%s.candidate.captions.json' % ('test', 'test'))
+
+
+    def _test(self, engine, batch):
+        features, image_ids = batch
+        cap_vecs = self.beam_decoder.decode(features)
+        captions = decode_captions(cap_vecs.numpy(), self.idx_to_word)
+        engine.state.captions = engine.state.captions + [{'image_id': image_id, 'caption': caption} for image_id, caption in zip(image_ids, captions)]
 
     def train(self, num_epochs=10):
         self.model.train()
