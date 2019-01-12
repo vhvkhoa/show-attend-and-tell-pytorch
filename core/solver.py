@@ -103,6 +103,7 @@ class CaptioningSolver(object):
                 self.test(self.val_loader, is_validation=True)
     
     def _train(self, engine, batch):
+        self.model.train()
         self.optimizer.zero_grad()
 
         features, packed_cap_vecs, captions, seq_lens = batch
@@ -163,6 +164,7 @@ class CaptioningSolver(object):
 
 
     def _test(self, engine, batch):
+        self.model.eval()
         features, image_ids = batch
         cap_vecs = self.beam_decoder.decode(features)
         captions = decode_captions(cap_vecs.numpy(), self.idx_to_word)
@@ -170,12 +172,10 @@ class CaptioningSolver(object):
         engine.state.captions = engine.state.captions + [{'image_id': int(image_id), 'caption': caption} for image_id, caption in zip(image_ids, captions)]
 
     def train(self, num_epochs=10):
-        self.model.train()
         self.train_engine.run(self.train_loader, max_epochs=num_epochs)
 
     def test(self, test_dataset=None, is_validation=False):
         self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, is_validation)    
-        self.model.eval()
 
         if is_validation == True:
             self.test_engine.run(self.val_loader)
