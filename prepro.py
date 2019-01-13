@@ -62,7 +62,7 @@ def _process_caption_data(phase, ann_file=None, max_length=None):
                 caption = caption.replace('&','and').replace('(','').replace(')','').replace('-',' ')
                 caption = ' '.join(caption.split())  # replace multiple spaces
 
-                caption_data['annotations'][i]['caption'] = caption
+                caption_data['annotations'][i]['caption'] = caption.lower()
                 if max_length != None and len(caption.split(' ')) > max_length:
                     del_idx.append(i)
 
@@ -154,7 +154,7 @@ def main():
 
             word_to_idx = _build_vocab(captions_data, threshold=word_count_threshold, vocab_size=vocab_size)
             save_json(word_to_idx, './data/word_to_idx.json')
-            
+
             new_captions_data = _build_caption_vector(captions_data, word_to_idx=word_to_idx, max_length=max_length)
             save_json(new_captions_data, ann_file)
 

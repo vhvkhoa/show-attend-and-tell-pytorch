@@ -87,4 +87,5 @@ class BeamSearchDecoder(object):
         best_beam_symbols = beam_symbols[:, 0]
         cand_symbols = torch.where(cand_finished.unsqueeze(-1), cand_symbols, best_beam_symbols)
 
-        return cand_symbols
+        # Remove <START> token
+        return cand_symbols[:, 1:]
