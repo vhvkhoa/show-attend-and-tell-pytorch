@@ -85,7 +85,7 @@ class CaptioningSolver(object):
 
         self.train_engine.add_event_handler(Events.ITERATION_COMPLETED, self.training_end_iter_handler)
         self.test_engine.add_event_handler(Events.EPOCH_STARTED, self.testing_start_epoch_handler)
-        self.test_engine.add_event_handler(Events.ITERATION_COMPLETED, self.testing_end_iter_handler)
+        #self.test_engine.add_event_handler(Events.ITERATION_COMPLETED, self.testing_end_iter_handler)
 
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
@@ -154,6 +154,8 @@ class CaptioningSolver(object):
 
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.captions
+        print(len(captions))
+        print(captions[:5])
         if is_val: 
             save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
             caption_scores = evaluate(get_scores=True)
