@@ -145,7 +145,7 @@ class CaptioningSolver(object):
         self.optimizer.step()
 
         return loss.item(), float(acc.item()) / float(torch.sum(batch_sizes[1:]).item())
-    
+
     def testing_start_epoch_handler(self, engine):
         engine.state.captions = []
 
