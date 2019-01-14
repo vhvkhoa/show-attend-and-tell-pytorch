@@ -71,8 +71,9 @@ class BeamSearchDecoder(object):
             cand_scores = torch.where(cand_mask, done_scores_max, cand_scores)
 
             # Compute beam candidate for next time-step
-            k_symbol_indices = k_indices % self.vocab_size
-            k_parent_indices = k_indices // self.vocab_size
+            k_symbol_indices = k_indices % (self.vocab_size - 1)
+            k_parent_indices = k_indices // (self.vocab_size - 1)
+            k_symbol_indices = k_symbol_indices + (k_symbol_indices >= self._end).long()
 
             past_beam_symbols = torch.gather(beam_symbols, 1,
                                              k_parent_indices.unsqueeze(-1).repeat(1, 1, t + 1))
@@ -82,7 +83,6 @@ class BeamSearchDecoder(object):
             beam_hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
             beam_cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
             beam_inputs = k_symbol_indices.to(self.device)
-            print('Next Beam Inputs:\t', beam_inputs[:5])
             torch.cuda.empty_cache()
 
         # if not finished, get the best sequence in beam candidate
