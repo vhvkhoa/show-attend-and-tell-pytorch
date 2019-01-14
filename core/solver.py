@@ -85,7 +85,7 @@ class CaptioningSolver(object):
 
         self.train_engine.add_event_handler(Events.ITERATION_COMPLETED, self.training_end_iter_handler)
         self.test_engine.add_event_handler(Events.EPOCH_STARTED, self.testing_start_epoch_handler)
-        #self.test_engine.add_event_handler(Events.ITERATION_COMPLETED, self.testing_end_iter_handler)
+        self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, True)    
 
         if not os.path.exists(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
@@ -99,8 +99,8 @@ class CaptioningSolver(object):
 
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
-            if (iteration + 1) % self.eval_every == 0:
-                self.test(self.val_loader, is_validation=True)
+        if (iteration + 1) % self.eval_every == 0:
+            self.test(self.val_loader, is_validation=True)
     
     def _train(self, engine, batch):
         self.model.train()
@@ -149,13 +149,9 @@ class CaptioningSolver(object):
     def testing_start_epoch_handler(self, engine):
         engine.state.captions = []
 
-    def testing_end_iter_handler(self, engine):
-        print(engine.state.iteration)
-
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.captions
-        print(len(captions))
-        print(captions[:5])
+        print(captions[:10])
         if is_val: 
             save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
             caption_scores = evaluate(get_scores=True)
@@ -163,7 +159,6 @@ class CaptioningSolver(object):
         
         else:
             save_json(captions, './data/%s/%s.candidate.captions.json' % ('test', 'test'))
-
 
     def _test(self, engine, batch):
         self.model.eval()
@@ -177,8 +172,6 @@ class CaptioningSolver(object):
         self.train_engine.run(self.train_loader, max_epochs=num_epochs)
 
     def test(self, test_dataset=None, is_validation=False):
-        self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, is_validation)    
-
         if is_validation == True:
             self.test_engine.run(self.val_loader)
         else:
