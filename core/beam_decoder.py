@@ -36,6 +36,7 @@ class BeamSearchDecoder(object):
         for t in range(self.n_time_steps):
             beam_size = beam_inputs.size(1)
             beam_logits, next_beam_hidden_states, next_beam_cell_states= [], [], [] 
+            print('Beam Inputs:\t\t', beam_inputs)
             for b in range(beam_size):
                 logits, alpha, (hidden_states, cell_states) = self.model(features,
                                                                         features_proj,
@@ -81,6 +82,7 @@ class BeamSearchDecoder(object):
             beam_hidden_states = torch.gather(beam_hidden_states, 0, k_parent_indices)
             beam_cell_states = torch.gather(beam_cell_states, 0, k_parent_indices)
             beam_inputs = k_symbol_indices.to(self.device)
+            print('Next Beam Inputs:\t', beam_inputs)
             torch.cuda.empty_cache()
 
         # if not finished, get the best sequence in beam candidate
