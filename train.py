@@ -31,6 +31,7 @@ parser.add_argument('--start_from', type=int, default=0, help='Step number to st
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint/', help='Path to directory where checkpoints saved every eval_steps.')
 parser.add_argument('--log_path', type=str, default='log/', help='Path to directory where logs saved during the training process. You can use tensorboard to visualize logging informations and re-read IFO printed on the console in .log files.')
 
+# Minh gay
 def main():
     args = parser.parse_args()
     # load train dataset
