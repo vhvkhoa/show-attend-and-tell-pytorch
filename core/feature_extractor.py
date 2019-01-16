@@ -24,14 +24,11 @@ class FeatureExtractor(object):
 
         self.model = torch.nn.Sequential(*list(orig_model.children())[:-layer])
 
-        for p in self.model.parameters():
-            p.requires_grad = False
-
         self.model.cuda()
         self.model.eval()
 
     def __call__(self, images):
-        images = torch.autograd.Variable(images.cuda())
-        features = self.model(images)
-        
+        with torch.no_grad():
+            images = torch.autograd.Variable(images.cuda())
+            features = self.model(images)
         return features.permute(0, 2, 3, 1)
