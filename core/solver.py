@@ -1,16 +1,13 @@
-import matplotlib.pyplot as plt
-import skimage.transform
-import numpy as np
-import time
-import os
-from scipy import ndimage
-from scipy.misc import imresize
-from tqdm import tqdm
 import torch
 from torch import optim, nn
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from ignite.engine import Engine, Events
+from tensorboardX import SummaryWriter
+
+import numpy as np
+import os
+
 from .utils import *
 from .dataset import CocoCaptionDataset
 from .beam_decoder import BeamSearchDecoder 
@@ -66,8 +63,8 @@ class CaptioningSolver(object):
         self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
         self.device = kwargs.pop('device', 'cuda:1')
 
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
-        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=4)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=1, collate_fn=pack_collate_fn)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=1)
 
         self.beam_decoder = BeamSearchDecoder(self.model, self.device, self.beam_size, len(self.idx_to_word), self._start, self._end, self.n_time_steps)
 
