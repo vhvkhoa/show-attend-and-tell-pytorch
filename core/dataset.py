@@ -37,6 +37,7 @@ class CocoCaptionDataset(Dataset):
     
     def __getitem__(self, index):
         item = self.dataset[index]
+        print(os.path.join('data', self.split, 'feats', item['file_name'] + '.npy'))
         feature_path = os.path.join('data', self.split, 'feats', item['file_name'] + '.npy')
         feature = np.load(feature_path)
         
