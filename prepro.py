@@ -40,8 +40,7 @@ parser.add_argument('-e' '--encoder_name', default='resnet101', help='CNN model 
 
 def _process_caption_data(phase, ann_file=None, max_length=None):
     if phase in ['val', 'train']:
-        with open(ann_file, 'r') as f:
-            caption_data = json.load(f)
+        caption_data = load_json(ann_file)
 
         if phase == 'val':
             caption_data['type'] = 'caption'
