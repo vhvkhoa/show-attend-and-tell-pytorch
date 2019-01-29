@@ -31,13 +31,15 @@ class CocoCaptionDataset(Dataset):
             dataset = json.load(f)
         if split == 'train':
             self.dataset = dataset['annotations']
+            print(self.dataset[0].keys())
             self.word_to_idx = json.load(open('data/word_to_idx.json', 'r'))
         else:
             self.dataset = dataset['images']
+            print(self.dataset[0].keys())
     
     def __getitem__(self, index):
         item = self.dataset[index]
-        print(item.keys())
+        print(self.split)
         feature_path = os.path.join('data', self.split, 'feats', item['file_name'] + '.npy')
         feature = np.load(feature_path)
         
