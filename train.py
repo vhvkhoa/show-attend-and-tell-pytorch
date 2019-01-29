@@ -18,7 +18,7 @@ parser.add_argument('--ctx2out', action='store_true', default=True, help='Link c
 parser.add_argument('--enable_selector', action='store_true', default=True, help='Enable selector to determine how much important the image context is at every time step.')
 
 """Training parameters"""
-parser.add_argument('--device', type=str, default='cuda:1', help='Device to be used for training model.')
+parser.add_argument('--device', type=str, default='cuda:0', help='Device to be used for training model.')
 parser.add_argument('--optimizer', type=str, default='rmsprop', help='Optimizer used to update model\'s weights.')
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate.')
 parser.add_argument('--num_epochs', type=int, default=10, help='Number of epochs.')
