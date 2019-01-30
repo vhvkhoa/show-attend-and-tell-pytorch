@@ -19,7 +19,7 @@ def pack_collate_fn(batch):
     len_sorted_cap_vecs = [np.array(cap_vecs[i]) for i in len_sorted_idx]
     len_sorted_features = torch.tensor([features[i] for i in len_sorted_idx])
     len_sorted_captions = [captions[i] for i in len_sorted_idx]
-    seq_lens = torch.tensor([len(cap_vec) for cap_vec in len_sorted_cap_vecs], dtype=torch.float)
+    seq_lens = torch.tensor([[len(cap_vec)] for cap_vec in len_sorted_cap_vecs], dtype=torch.float)
 
     packed_cap_vecs = nn.utils.rnn.pack_sequence([torch.from_numpy(cap_vec) for cap_vec in len_sorted_cap_vecs])
 
@@ -74,7 +74,8 @@ class CaptioningSolver(object):
         elif self.update_rule == 'rmsprop':
             self.optimizer = optim.RMSprop(params=self.model.parameters(), lr=self.learning_rate, momentum=0.9)
 
-        self.criterion = nn.CrossEntropyLoss(ignore_index=self._null)
+        self.word_criterion = nn.CrossEntropyLoss(ignore_index=self._null)
+        self.alpha_criterion = nn.MSELoss(reduction='sum')
 
         self.train_engine = Engine(self._train)
         self.test_engine = Engine(self._test)
@@ -127,16 +128,15 @@ class CaptioningSolver(object):
                                                                      curr_cap_vecs,
                                                                      hidden_states[:, :batch_sizes[i]],
                                                                      cell_states[:, :batch_sizes[i]])
-            loss += self.criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
+            loss += self.word_criterion(logits[:batch_sizes[i+1]], cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
             acc += torch.sum(torch.argmax(logits, dim=-1)[:batch_sizes[i+1]] == cap_vecs[end_idx:end_idx+batch_sizes[i+1]])
 
             alphas.append(alpha)
             start_idx = end_idx
         
         if self.alpha_c > 0:
-            alphas = nn.utils.rnn.pad_sequence(alphas)
-            print(alphas.size())
-            alphas_reg = self.alpha_c * torch.sum((torch.unsqueeze(seq_lens, -1) - torch.sum(alphas, 1)) ** 2)
+            sum_loc_alphas = torch.sum(nn.utils.rnn.pad_sequence(alphas), 1)
+            alphas_reg = self.alpha_c * self.alpha_criterion(sum_loc_alphas, seq_lens.repeat(1, self.model.L))
 
         loss.backward()
         self.optimizer.step()
