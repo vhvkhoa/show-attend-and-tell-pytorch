@@ -137,6 +137,7 @@ class CaptioningSolver(object):
         if self.alpha_c > 0:
             sum_loc_alphas = torch.sum(nn.utils.rnn.pad_sequence(alphas), 1)
             alphas_reg = self.alpha_c * self.alpha_criterion(sum_loc_alphas, seq_lens.repeat(1, self.model.L))
+            loss += alphas_reg
 
         loss.backward()
         self.optimizer.step()
