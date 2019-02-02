@@ -71,7 +71,7 @@ def _process_caption_data(phase, ann_file=None, max_length=None):
                 del caption_data['annotations'][idx]
             print("The number of captions after deletion: %d" %len(caption_data['annotations']))
         
-        save_json(caption_data, os.path.join('data', phase, ann_file.split('/')[-1])
+        save_json(caption_data, os.path.join('data', phase, ann_file.split('/')[-1]))
 
 
 def _build_vocab(captions_data, threshold=1, vocab_size=0):
