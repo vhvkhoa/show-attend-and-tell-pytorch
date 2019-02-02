@@ -27,7 +27,7 @@ parser.add_argument('--snapshot_steps', type=int, default=10, help='Logging ever
 parser.add_argument('--eval_steps', type=int, default=100, help='Evaluate and save current model every eval_steps steps.')
 parser.add_argument('--metric', type=str, default='CIDEr', help='Metric being based on to choose best model, please insert on of these strings: [Bleu_i, METEOR, ROUGE_L, CIDEr] with i is 1 through 4.')
 parser.add_argument('--pretrained_model', type=str, help='Path to a pretrained model to initiate weights from.') 
-parser.add_argument('--start_from', type=int, default=0, help='Step number to start model from, this parameter helps to continue logging in tensorboard from the previous stopped training phase.') 
+parser.add_argument('--start_from', type=int, default=0, help='Epoch index to start from, this parameter helps to continue logging in tensorboard from the previous stopped training phase.') 
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint/', help='Path to directory where checkpoints saved every eval_steps.')
 parser.add_argument('--log_path', type=str, default='log/', help='Path to directory where logs saved during the training process. You can use tensorboard to visualize logging informations and re-read IFO printed on the console in .log files.')
 

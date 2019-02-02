@@ -72,7 +72,7 @@ class CaptioningSolver(object):
         if self.update_rule == 'adam':
             self.optimizer = optim.Adam(params=self.model.parameters(), lr=self.learning_rate)
         elif self.update_rule == 'rmsprop':
-            self.optimizer = optim.RMSprop(params=self.model.parameters(), lr=self.learning_rate, momentum=0.9)
+            self.optimizer = optim.RMSprop(params=self.model.parameters(), lr=self.learning_rate)
 
         self.word_criterion = nn.CrossEntropyLoss(ignore_index=self._null)
         self.alpha_criterion = nn.MSELoss(reduction='sum')
@@ -88,7 +88,13 @@ class CaptioningSolver(object):
             os.makedirs(self.checkpoint_dir)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
-            
+        
+        self.writer = SummaryWriter(self.log_path, purge_step=self.start_from*len(self.train_loader))
+    
+    def training_start_handler(self, engine):
+        iteration = self.start_from * len(self.train_loader)
+        epoch = self.start_from
+    
     def training_end_iter_handler(self, engine):
         iteration = engine.state.iteration
         epoch = engine.state.epoch
@@ -96,6 +102,8 @@ class CaptioningSolver(object):
 
         if (iteration + 1) % self.snapshot_steps == 0:
             print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
+            self.writer.add_scalar('Loss', loss, iteration)
+            self.writer.add_scalar('Accuracy', acc, iteration)
         if (iteration + 1) % self.eval_every == 0:
             self.test(self.val_loader, is_validation=True)
     
