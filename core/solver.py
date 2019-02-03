@@ -103,7 +103,7 @@ class CaptioningSolver(object):
         epoch = engine.state.epoch
         loss, acc= engine.state.output
 
-        print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
+        print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration, loss, acc))
         self.writer.add_scalar('Loss', loss, iteration)
         self.writer.add_scalar('Accuracy', acc, iteration)
 
