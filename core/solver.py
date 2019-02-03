@@ -58,7 +58,7 @@ class CaptioningSolver(object):
         self.eval_every = kwargs.pop('eval_every', 200)
         self.log_path = kwargs.pop('log_path', './log/')
         self.checkpoint_dir = kwargs.pop('checkpoint_dir', './model/')
-        self.checkpoint = kwargs.pop('checkpoint', '')
+        self.checkpoint = kwargs.pop('checkpoint', None)
         self.device = kwargs.pop('device', 'cuda:0')
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, collate_fn=pack_collate_fn)
@@ -87,7 +87,7 @@ class CaptioningSolver(object):
             os.makedirs(self.checkpoint_dir)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
-        if self.checkpoint != '':
+        if self.checkpoint != None:
             self._load(self.checkpoint)
         else:
             self.start_iter = 1
