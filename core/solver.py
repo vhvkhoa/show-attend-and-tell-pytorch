@@ -56,12 +56,10 @@ class CaptioningSolver(object):
         self.alpha_c = kwargs.pop('alpha_c', 1.0)
         self.snapshot_steps = kwargs.pop('snapshot_steps', 100)
         self.eval_every = kwargs.pop('eval_every', 200)
-        self.start_from = kwargs.pop('start_from', 0)
         self.log_path = kwargs.pop('log_path', './log/')
         self.checkpoint_dir = kwargs.pop('checkpoint_dir', './model/')
-        self.pretrained_model = kwargs.pop('pretrained_model', '')
-        self.test_checkpoint = kwargs.pop('test_checkpoint', './model/lstm/model-1')
-        self.device = kwargs.pop('device', 'cuda:1')
+        self.checkpoint = kwargs.pop('checkpoint', '')
+        self.device = kwargs.pop('device', 'cuda:0')
 
         self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=1, collate_fn=pack_collate_fn)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size, num_workers=1)
@@ -81,6 +79,7 @@ class CaptioningSolver(object):
         self.test_engine = Engine(self._test)
 
         self.train_engine.add_event_handler(Events.ITERATION_COMPLETED, self.training_end_iter_handler)
+        self.train_engine.add_event_handler(Events.STARTED, self.training_start_handler)
         self.test_engine.add_event_handler(Events.EPOCH_STARTED, self.testing_start_epoch_handler)
         self.test_engine.add_event_handler(Events.EPOCH_COMPLETED, self.testing_end_epoch_handler, True)    
 
@@ -88,24 +87,48 @@ class CaptioningSolver(object):
             os.makedirs(self.checkpoint_dir)
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
-        
-        self.writer = SummaryWriter(self.log_path, purge_step=self.start_from*len(self.train_loader))
+        if self.checkpoint != '':
+            self._load(self.checkpoint)
+        else:
+            self.start_iter = 1
+
+        self.writer = SummaryWriter(self.log_path, purge_step=self.start_iter*len(self.train_loader))
     
     def training_start_handler(self, engine):
-        iteration = self.start_from * len(self.train_loader)
-        epoch = self.start_from
+        iteration = self.start_iter 
+        epoch = int(self.start_iter // len(self.train_loader))
     
     def training_end_iter_handler(self, engine):
         iteration = engine.state.iteration
         epoch = engine.state.epoch
         loss, acc= engine.state.output
 
-        if (iteration + 1) % self.snapshot_steps == 0:
-            print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
-            self.writer.add_scalar('Loss', loss, iteration)
-            self.writer.add_scalar('Accuracy', acc, iteration)
-        if (iteration + 1) % self.eval_every == 0:
+        print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration + 1, loss, acc))
+        self.writer.add_scalar('Loss', loss, iteration)
+        self.writer.add_scalar('Accuracy', acc, iteration)
+
+        if iteration % self.eval_every == 0:
             self.test(self.val_loader, is_validation=True)
+        if iteration % self.snapshot_steps == 0:
+            self._save(epoch, iteration, loss)
+    
+    def training_end_epoch_handler(self, engine):
+        self._save(engine.state.epoch, engine.state.iteration, engine.state.output[0])
+    
+    def _save(self, epoch, iteration, loss):
+        torch.save({
+                    'epoch': epoch,
+                    'iteration': iteration,
+                    'model_state_dict': self.model.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                    'loss': loss
+                    }, os.path.join(self.checkpoint_dir, str(iteration) + '.pth'))
+    
+    def _load(self, model_path):
+        checkpoint = torch.load(model_path)
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        self.start_iter = checkpoint['iteration'] + 1
     
     def _train(self, engine, batch):
         self.model.train()

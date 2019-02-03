@@ -23,11 +23,10 @@ parser.add_argument('--optimizer', type=str, default='rmsprop', help='Optimizer 
 parser.add_argument('--learning_rate', type=float, default=0.0001, help='Initial learning rate.')
 parser.add_argument('--num_epochs', type=int, default=10, help='Number of epochs.')
 parser.add_argument('--batch_size', type=int, default=128, help='Number of examples per mini-batch.')
-parser.add_argument('--snapshot_steps', type=int, default=10, help='Logging every snapshot_steps steps.')
+parser.add_argument('--snapshot_steps', type=int, default=100, help='Logging every snapshot_steps steps.')
 parser.add_argument('--eval_steps', type=int, default=100, help='Evaluate and save current model every eval_steps steps.')
 parser.add_argument('--metric', type=str, default='CIDEr', help='Metric being based on to choose best model, please insert on of these strings: [Bleu_i, METEOR, ROUGE_L, CIDEr] with i is 1 through 4.')
-parser.add_argument('--pretrained_model', type=str, help='Path to a pretrained model to initiate weights from.') 
-parser.add_argument('--start_from', type=int, default=0, help='Epoch index to start from, this parameter helps to continue logging in tensorboard from the previous stopped training phase.') 
+parser.add_argument('--checkpoint', type=str, help='Path to a pretrained model to initiate weights from.') 
 parser.add_argument('--checkpoint_dir', type=str, default='checkpoint/', help='Path to directory where checkpoints saved every eval_steps.')
 parser.add_argument('--log_path', type=str, default='log/', help='Path to directory where logs saved during the training process. You can use tensorboard to visualize logging informations and re-read IFO printed on the console in .log files.')
 
@@ -47,7 +46,7 @@ def main():
                                     batch_size=args.batch_size, beam_size=args.beam_size, optimizer=args.optimizer, 
                                     learning_rate=args.learning_rate, metric=args.metric,
                                     snapshot_steps=args.snapshot_steps, eval_every=args.eval_steps,
-                                    pretrained_model=args.pretrained_model, start_from=args.start_from, checkpoint_dir=args.checkpoint_dir, 
+                                    checkpoint=args.checkpoint, checkpoint_dir=args.checkpoint_dir, 
                                     log_path=args.log_path, device=args.device)
 
     solver.train(num_epochs=args.num_epochs)
