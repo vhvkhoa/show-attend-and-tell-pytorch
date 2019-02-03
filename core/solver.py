@@ -72,7 +72,7 @@ class CaptioningSolver(object):
         elif self.update_rule == 'rmsprop':
             self.optimizer = optim.RMSprop(params=self.model.parameters(), lr=self.learning_rate)
 
-        self.word_criterion = nn.CrossEntropyLoss(ignore_index=self._null)
+        self.word_criterion = nn.CrossEntropyLoss(ignore_index=self._null, reduction='sum')
         self.alpha_criterion = nn.MSELoss(reduction='sum')
 
         self.train_engine = Engine(self._train)
@@ -173,6 +173,7 @@ class CaptioningSolver(object):
             alphas_reg = self.alpha_c * self.alpha_criterion(sum_loc_alphas, (seq_lens / self.model.L).repeat(1, self.model.L))
             loss += alphas_reg
 
+        loss /= batch_sizes[0]
         loss.backward()
         self.optimizer.step()
 
