@@ -59,9 +59,6 @@ def save_json(data, path):
         json.dump(data, f)
 
 def evaluate(candidate_path='./data/val/val.candidate.captions.json', reference_path='./data/val/captions_val2017.json', get_scores=False):
-    reference_path = os.path.join(data_path, "annotations/captions_%s2017.json" %(split))
-    candidate_path = os.path.join(data_path, "%s/%s.candidate.captions.json" %(split, split))
-
     # load caption data
     ref = COCO(reference_path)
     hypo = ref.loadRes(candidate_path)

@@ -182,7 +182,8 @@ class CaptioningSolver(object):
         captions = engine.state.captions
         print(captions[:10])
         if is_val: 
-            save_json(captions, './data/%s/%s.candidate.captions.json' % ('val', 'val'))
+            cap_path = './data/%s/%s.candidate.captions.json' % ('val', 'val')
+            save_json(captions, cap_path)
             caption_scores = evaluate(get_scores=True)
             write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
         
