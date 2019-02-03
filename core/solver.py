@@ -94,27 +94,6 @@ class CaptioningSolver(object):
 
         self.writer = SummaryWriter(self.log_path, purge_step=self.start_iter*len(self.train_loader))
     
-    def training_start_handler(self, engine):
-        iteration = self.start_iter 
-        epoch = int(self.start_iter // len(self.train_loader))
-    
-    def training_end_iter_handler(self, engine):
-        iteration = engine.state.iteration
-        epoch = engine.state.epoch
-        loss, acc= engine.state.output
-
-        print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration, loss, acc))
-        self.writer.add_scalar('Loss', loss, iteration)
-        self.writer.add_scalar('Accuracy', acc, iteration)
-
-        if iteration % self.eval_every == 0:
-            self.test(self.val_loader, is_validation=True)
-        if iteration % self.snapshot_steps == 0:
-            self._save(epoch, iteration, loss)
-    
-    def training_end_epoch_handler(self, engine):
-        self._save(engine.state.epoch, engine.state.iteration, engine.state.output[0])
-    
     def _save(self, epoch, iteration, loss):
         torch.save({
                     'epoch': epoch,
@@ -129,6 +108,30 @@ class CaptioningSolver(object):
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
         self.start_iter = checkpoint['iteration'] + 1
+    
+    def training_start_handler(self, engine):
+        iteration = self.start_iter 
+        epoch = int(self.start_iter // len(self.train_loader))
+    
+    def training_end_iter_handler(self, engine):
+        iteration = engine.state.iteration
+        epoch = engine.state.epoch
+        loss, acc= engine.state.output
+
+        print('Epoch: {}, Iteration:{}, Loss:{}, Accuracy:{}'.format(epoch, iteration, loss, acc))
+        self.writer.add_scalar('Loss', loss, iteration)
+        self.writer.add_scalar('Accuracy', acc, iteration)
+
+        if iteration % self.eval_every == 0:
+            caption_scores = self.test(self.val_loader, is_validation=True)
+            for metric, score in caption_scores.items():
+                self.writer.add_scalar(metric, score, iteration)
+
+        if iteration % self.snapshot_steps == 0:
+            self._save(epoch, iteration, loss)
+    
+    def training_end_epoch_handler(self, engine):
+        self._save(engine.state.epoch, engine.state.iteration, engine.state.output[0])
     
     def _train(self, engine, batch):
         self.model.train()
@@ -180,15 +183,12 @@ class CaptioningSolver(object):
 
     def testing_end_epoch_handler(self, engine, is_val):
         captions = engine.state.captions
-        print(captions[:10])
         if is_val: 
             cap_path = './data/%s/%s.candidate.captions.json' % ('val', 'val')
             save_json(captions, cap_path)
             caption_scores = evaluate(get_scores=True)
-            for metric, score in caption_scores.items():
-                self.writer.add_scalar(metric, score, engine.state.iteration)
             write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
-        
+            engine.state.scores = caption_scores
         else:
             save_json(captions, './data/%s/%s.candidate.captions.json' % ('test', 'test'))
 
@@ -205,7 +205,8 @@ class CaptioningSolver(object):
 
     def test(self, test_dataset=None, is_validation=False):
         if is_validation == True:
-            self.test_engine.run(self.val_loader)
+            test_state = self.test_engine.run(self.val_loader)
+            return test_state.scores
         else:
             self.test_loader = DataLoader(test_dataset, batch_size=self.batch_size, num_workers=4, collate_fn=pack_collate_fn)
             self.test_engine.run(self.test_loader)
