@@ -186,7 +186,7 @@ class CaptioningSolver(object):
             save_json(captions, cap_path)
             caption_scores = evaluate(get_scores=True)
             for metric, score in caption_scores.items():
-                self.writer.add_scalar(metric, score, engine.iteration)
+                self.writer.add_scalar(metric, score, engine.state.iteration)
             write_scores(caption_scores, './', engine.state.epoch, engine.state.iteration)
         
         else:
